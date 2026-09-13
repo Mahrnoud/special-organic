@@ -1,13 +1,17 @@
 /* Organic Special — admin dashboard logic */
 
-function statusBadgeHtml(status) {
-  const map = {
-    pending: { cls: 'badge-status-pending', key: 'status_pending' },
-    confirmed: { cls: 'badge-status-confirmed', key: 'status_confirmed' },
-    cancelled: { cls: 'badge-status-cancelled', key: 'status_cancelled' },
-  };
-  const s = map[status] || map.pending;
-  return `<span class="badge ${s.cls}">${osT(s.key)}</span>`;
+const OS_ORDER_STATUSES = ['pending', 'confirmed', 'shipped', 'delivered', 'returned'];
+
+/* Orders currently loaded in the table (already filtered by whatever the
+   admin has selected). Kept around so Export can reuse the same data
+   without an extra request. */
+let osLastOrders = [];
+
+function statusSelectHtml(orderId, status) {
+  const options = OS_ORDER_STATUSES.map(
+    (s) => `<option value="${s}" ${s === status ? 'selected' : ''}>${osT('status_' + s)}</option>`
+  ).join('');
+  return `<select class="form-select form-select-sm status-select status-select-${status}" data-id="${orderId}">${options}</select>`;
 }
 
 function formatDate(isoString) {
@@ -32,8 +36,38 @@ function currentFilters() {
   return {
     country: document.getElementById('filterCountry').value,
     city: document.getElementById('filterCity').value,
+    status: document.getElementById('filterStatus').value,
+    date_from: document.getElementById('filterDateFrom').value,
+    date_to: document.getElementById('filterDateTo').value,
     q: document.getElementById('searchOrderId').value.trim(),
   };
+}
+
+/* Sends a status change to the server. Reloads the table afterwards so the
+   stat tiles and any other open views stay in sync. */
+function updateOrderStatus(orderId, status, selectEl) {
+  if (selectEl) selectEl.disabled = true;
+
+  fetch('api/update_order_status.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify({ id: orderId, status }),
+  })
+    .then((res) => {
+      if (res.status === 401) { window.location.href = 'admin-login.html'; throw new Error('unauthorized'); }
+      return res.json();
+    })
+    .then((data) => {
+      if (!data || !data.success) {
+        alert((data && data.message) || osT('status_update_error'));
+      }
+      loadOrders();
+    })
+    .catch(() => {
+      alert(osT('status_update_error'));
+      loadOrders();
+    });
 }
 
 function loadOrders() {
@@ -48,6 +82,9 @@ function loadOrders() {
   const params = new URLSearchParams();
   if (f.country) params.set('country', f.country);
   if (f.city) params.set('city', f.city);
+  if (f.status) params.set('status', f.status);
+  if (f.date_from) params.set('date_from', f.date_from);
+  if (f.date_to) params.set('date_to', f.date_to);
   if (f.q) params.set('q', f.q);
 
   fetch('api/get_orders.php?' + params.toString(), { credentials: 'same-origin' })
@@ -59,9 +96,14 @@ function loadOrders() {
       loading.classList.add('d-none');
       if (!data || !data.success) return;
 
+      osLastOrders = data.orders || [];
+
       document.getElementById('statTotal').textContent = data.stats.total;
       document.getElementById('statPending').textContent = data.stats.pending;
       document.getElementById('statConfirmed').textContent = data.stats.confirmed;
+      document.getElementById('statShipped').textContent = data.stats.shipped;
+      document.getElementById('statDelivered').textContent = data.stats.delivered;
+      document.getElementById('statReturned').textContent = data.stats.returned;
 
       if (data.orders.length === 0) {
         noOrders.classList.remove('d-none');
@@ -77,18 +119,23 @@ function loadOrders() {
           <td>${o.city}</td>
           <td>${o.mobile_whatsapp}</td>
           <td>${osFormatPrice(o.total_amount)}</td>
-          <td>${statusBadgeHtml(o.status)}</td>
+          <td>${statusSelectHtml(o.id, o.status)}</td>
           <td>${formatDate(o.created_at)}</td>
           <td><button class="btn btn-sm btn-outline-forest view-order-btn" data-id="${o.id}"><span data-i18n="view">${osT('view')}</span></button></td>
         </tr>`
         )
         .join('');
 
+      tbody.querySelectorAll('.status-select').forEach((sel) => {
+        sel.addEventListener('change', () => {
+          updateOrderStatus(Number(sel.getAttribute('data-id')), sel.value, sel);
+        });
+      });
+
       tbody.querySelectorAll('tr').forEach((row) => {
         row.addEventListener('click', (e) => {
-          if (e.target.closest('.view-order-btn') || true) {
-            openOrderDetails(Number(row.getAttribute('data-id')));
-          }
+          if (e.target.closest('.status-select')) return; // let the dropdown work on its own
+          openOrderDetails(Number(row.getAttribute('data-id')));
         });
       });
     })
@@ -108,10 +155,19 @@ function openOrderDetails(orderId) {
       document.getElementById('detailsName').textContent = o.full_name;
       document.getElementById('detailsDate').textContent = formatDate(o.created_at);
       document.getElementById('detailsCity').textContent = `${o.city}, ${o.country}`;
-      document.getElementById('detailsStatus').innerHTML = statusBadgeHtml(o.status);
       document.getElementById('detailsMobile').textContent = o.mobile_whatsapp;
       document.getElementById('detailsMobileAlt').textContent = o.mobile_additional || '—';
       document.getElementById('detailsTotal').textContent = osFormatPrice(o.total_amount);
+
+      const statusSelect = document.getElementById('detailsStatusSelect');
+      statusSelect.innerHTML = OS_ORDER_STATUSES.map(
+        (s) => `<option value="${s}" ${s === o.status ? 'selected' : ''}>${osT('status_' + s)}</option>`
+      ).join('');
+      statusSelect.className = `form-select form-select-sm status-select status-select-${o.status}`;
+      statusSelect.onchange = () => {
+        statusSelect.className = `form-select form-select-sm status-select status-select-${statusSelect.value}`;
+        updateOrderStatus(o.id, statusSelect.value, statusSelect);
+      };
 
       const list = document.getElementById('detailsItems');
       list.innerHTML = o.items
@@ -127,8 +183,70 @@ function openOrderDetails(orderId) {
     });
 }
 
+/* Builds a nicely formatted .xlsx from whatever is currently loaded in the
+   table (i.e. respects the active filters), using the SheetJS library. */
+function exportOrdersToExcel() {
+  if (!osLastOrders.length) {
+    alert(osT('nothing_to_export'));
+    return;
+  }
+
+  const headers = [
+    osT('order_id_col'),
+    osT('customer_col'),
+    osT('city_col'),
+    osT('filter_country'),
+    osT('mobile_whatsapp'),
+    osT('mobile_additional'),
+    osT('items_ordered'),
+    `${osT('total_col')} (${osT('currency')})`,
+    osT('status_col'),
+    osT('date_col'),
+  ];
+
+  const rows = osLastOrders.map((o) => [
+    o.id,
+    o.full_name,
+    o.city,
+    o.country,
+    o.mobile_whatsapp,
+    o.mobile_additional || '',
+    (o.items || []).map((it) => `${it.name} × ${it.qty}`).join(', '),
+    Number(o.total_amount),
+    osT('status_' + o.status),
+    formatDate(o.created_at),
+  ]);
+
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+
+  ws['!cols'] = [
+    { wch: 9 },  // Order #
+    { wch: 22 }, // Customer
+    { wch: 14 }, // City
+    { wch: 10 }, // Country
+    { wch: 16 }, // Mobile
+    { wch: 16 }, // Additional mobile
+    { wch: 45 }, // Items
+    { wch: 13 }, // Total
+    { wch: 12 }, // Status
+    { wch: 18 }, // Date
+  ];
+
+  // Freeze the header row so it stays visible while scrolling in Excel.
+  ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, osT('dashboard_title').slice(0, 31) || 'Orders');
+
+  const dateStr = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(wb, `organic-special-orders-${dateStr}.xlsx`);
+}
+
 document.getElementById('filterCountry').addEventListener('change', loadOrders);
 document.getElementById('filterCity').addEventListener('change', loadOrders);
+document.getElementById('filterStatus').addEventListener('change', loadOrders);
+document.getElementById('filterDateFrom').addEventListener('change', loadOrders);
+document.getElementById('filterDateTo').addEventListener('change', loadOrders);
 document.getElementById('searchOrderId').addEventListener('input', () => {
   clearTimeout(window.__osSearchDebounce);
   window.__osSearchDebounce = setTimeout(loadOrders, 350);
@@ -136,9 +254,13 @@ document.getElementById('searchOrderId').addEventListener('input', () => {
 document.getElementById('clearFiltersBtn').addEventListener('click', () => {
   document.getElementById('filterCountry').value = '';
   document.getElementById('filterCity').value = '';
+  document.getElementById('filterStatus').value = '';
+  document.getElementById('filterDateFrom').value = '';
+  document.getElementById('filterDateTo').value = '';
   document.getElementById('searchOrderId').value = '';
   loadOrders();
 });
+document.getElementById('exportExcelBtn').addEventListener('click', exportOrdersToExcel);
 document.getElementById('logoutBtn').addEventListener('click', () => {
   fetch('api/admin_logout.php', { method: 'POST', credentials: 'same-origin' })
     .finally(() => { window.location.href = 'admin-login.html'; });

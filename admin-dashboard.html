@@ -30,53 +30,94 @@
   <main class="container py-4">
     <!-- Stat tiles -->
     <div class="row g-3 mb-4">
-      <div class="col-6 col-md-4">
+      <div class="col-6 col-md-2">
         <div class="stat-tile">
           <div class="stat-value" id="statTotal">0</div>
           <div class="stat-label" data-i18n="total_orders">Total orders</div>
         </div>
       </div>
-      <div class="col-6 col-md-4">
+      <div class="col-6 col-md-2">
         <div class="stat-tile">
           <div class="stat-value" id="statPending">0</div>
           <div class="stat-label" data-i18n="pending_orders">Pending</div>
         </div>
       </div>
-      <div class="col-6 col-md-4">
+      <div class="col-6 col-md-2">
         <div class="stat-tile">
           <div class="stat-value" id="statConfirmed">0</div>
           <div class="stat-label" data-i18n="confirmed_orders">Confirmed</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-2">
+        <div class="stat-tile">
+          <div class="stat-value" id="statShipped">0</div>
+          <div class="stat-label" data-i18n="shipped_orders">Shipped</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-2">
+        <div class="stat-tile">
+          <div class="stat-value" id="statDelivered">0</div>
+          <div class="stat-label" data-i18n="delivered_orders">Delivered</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-2">
+        <div class="stat-tile">
+          <div class="stat-value" id="statReturned">0</div>
+          <div class="stat-label" data-i18n="returned_orders">Returned</div>
         </div>
       </div>
     </div>
 
     <!-- Filters -->
     <div class="row g-2 mb-3 align-items-end">
-      <div class="col-md-3">
+      <div class="col-6 col-md-2">
         <label class="form-label small" data-i18n="filter_country">Country</label>
         <select class="form-select" id="filterCountry">
           <option value="" data-i18n="all_categories">All</option>
           <option value="Egypt" data-i18n="egypt">Egypt</option>
         </select>
       </div>
-      <div class="col-md-3">
+      <div class="col-6 col-md-2">
         <label class="form-label small" data-i18n="filter_city">City</label>
         <select class="form-select" id="filterCity">
           <option value="" data-i18n="all_cities">All cities</option>
         </select>
       </div>
-      <div class="col-md-4">
+      <div class="col-6 col-md-2">
+        <label class="form-label small" data-i18n="filter_status">Status</label>
+        <select class="form-select" id="filterStatus">
+          <option value="" data-i18n="all_statuses">All statuses</option>
+          <option value="pending" data-i18n="status_pending">Pending</option>
+          <option value="confirmed" data-i18n="status_confirmed">Confirmed</option>
+          <option value="shipped" data-i18n="status_shipped">Shipped</option>
+          <option value="delivered" data-i18n="status_delivered">Delivered</option>
+          <option value="returned" data-i18n="status_returned">Returned</option>
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small" data-i18n="date_from">From</label>
+        <input type="date" class="form-control" id="filterDateFrom">
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small" data-i18n="date_to">To</label>
+        <input type="date" class="form-control" id="filterDateTo">
+      </div>
+      <div class="col-6 col-md-2">
         <label class="form-label small" data-i18n="search_by_id">Search by order ID</label>
         <div class="input-group">
           <span class="input-group-text"><i class="bi bi-hash"></i></span>
           <input type="text" class="form-control" id="searchOrderId" inputmode="numeric">
         </div>
       </div>
-      <div class="col-md-2">
-        <button type="button" class="btn btn-outline-forest w-100" id="clearFiltersBtn">
-          <i class="bi bi-x-circle me-1"></i><span data-i18n="clear_filters">Clear</span>
-        </button>
-      </div>
+    </div>
+
+    <div class="d-flex justify-content-between flex-wrap gap-2 mb-3">
+      <button type="button" class="btn btn-outline-forest" id="clearFiltersBtn">
+        <i class="bi bi-x-circle me-1"></i><span data-i18n="clear_filters">Clear</span>
+      </button>
+      <button type="button" class="btn btn-forest" id="exportExcelBtn">
+        <i class="bi bi-file-earmark-excel me-1"></i><span data-i18n="export_excel">Export to Excel</span>
+      </button>
     </div>
 
     <!-- Orders table -->
@@ -134,7 +175,7 @@
             </div>
             <div class="col-md-6 mb-2">
               <div class="text-muted-soft small" data-i18n="status_col">Status</div>
-              <div id="detailsStatus"></div>
+              <select class="form-select form-select-sm status-select" id="detailsStatusSelect"></select>
             </div>
             <div class="col-md-6 mb-2">
               <div class="text-muted-soft small" data-i18n="mobile_whatsapp">Mobile number (WhatsApp)</div>
@@ -158,6 +199,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="assets/js/i18n.js"></script>
   <script src="assets/js/egypt-cities.js"></script>
   <script src="assets/js/admin.js"></script>

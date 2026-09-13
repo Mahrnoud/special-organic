@@ -73,17 +73,20 @@ a:focus-visible, [role="button"]:focus-visible {
   box-shadow: none;
 }
 
+/* Logo mark used in every top bar (storefront + admin). Not scoped to a
+   single parent class so it stays a consistent size everywhere it's used. */
+.os-logo-mark {
+  height: 40px;
+  width: auto;
+  border-radius: 8px;
+}
+
 /* =========================================================
    Top bar (shared across storefront pages)
    ========================================================= */
 .os-topbar {
   background: var(--os-white);
   border-bottom: 1px solid var(--os-sand-line);
-}
-.os-topbar .os-logo-mark {
-  height: 40px;
-  width: auto;
-  border-radius: 8px;
 }
 .os-topbar .brand-name {
   font-weight: 700;
@@ -390,9 +393,31 @@ a:focus-visible, [role="button"]:focus-visible {
 }
 .orders-table tbody tr { cursor: pointer; }
 .orders-table tbody tr:hover { background: var(--os-sand); }
-.badge-status-pending { background: #E9CE7A; color: #5b4a10; }
-.badge-status-confirmed { background: var(--os-leaf); color: var(--os-forest-dark); }
-.badge-status-cancelled { background: #E7B4A6; color: var(--os-danger); }
+
+/* Editable order-status dropdown, shown in the table row and in the order
+   details modal. Color reflects the selected status so the table stays
+   scannable at a glance. */
+.status-select {
+  border: none;
+  border-radius: var(--os-radius-pill);
+  font-weight: 700;
+  font-size: 0.78rem;
+  padding-block: 4px;
+  padding-inline-start: 10px;
+  padding-inline-end: 28px;
+  min-width: 112px;
+  cursor: pointer;
+}
+.status-select:focus {
+  box-shadow: none;
+  outline: 2px solid var(--os-forest-dark);
+  outline-offset: 1px;
+}
+.status-select-pending { background-color: #E9CE7A; color: #5b4a10; }
+.status-select-confirmed { background-color: var(--os-lime); color: #3c4a12; }
+.status-select-shipped { background-color: #8FBFE0; color: #16425b; }
+.status-select-delivered { background-color: var(--os-leaf); color: #ffffff; }
+.status-select-returned { background-color: #E7B4A6; color: var(--os-danger); }
 
 /* Utility */
 .text-muted-soft { color: #6b6f63; }
