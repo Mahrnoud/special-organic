@@ -2,42 +2,18 @@
 
 osRequireLang();
 
-let osActiveCategory = 'all';
 let osSelectedProduct = null;
 let osModalQty = 1;
 
-function renderCategoryChips() {
-  const wrap = document.getElementById('categoryChips');
-  const chips = [{ id: 'all', label: osT('all_categories') }].concat(
-    OS_CATEGORIES.map((c) => ({ id: c.id, label: osCategoryName(c.id) }))
-  );
-  wrap.innerHTML = chips
-    .map(
-      (c) => `<button type="button" class="category-chip ${c.id === osActiveCategory ? 'active' : ''}" data-cat="${c.id}">${c.label}</button>`
-    )
-    .join('');
-  wrap.querySelectorAll('.category-chip').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      osActiveCategory = btn.getAttribute('data-cat');
-      renderCategoryChips();
-      renderProductGrid();
-    });
-  });
-}
-
+/* ---------- Product grid ---------- */
 function renderProductGrid() {
   const grid = document.getElementById('productGrid');
-  const noResults = document.getElementById('noResults');
-  const term = (document.getElementById('searchInput').value || '').trim().toLowerCase();
 
-  const filtered = OS_PRODUCTS.filter((p) => {
-    const matchesCategory = osActiveCategory === 'all' || p.category === osActiveCategory;
-    const name = osProductName(p).toLowerCase();
-    const matchesSearch = !term || name.includes(term);
-    return matchesCategory && matchesSearch;
-  });
+  // The bundle lives in its own "offer" card further up the page, not in
+  // the regular grid.
+  const items = OS_PRODUCTS.filter((p) => p.category !== 'bundle');
 
-  grid.innerHTML = filtered
+  grid.innerHTML = items
     .map(
       (p) => `
     <div class="col-6 col-md-4 col-lg-3">
@@ -56,8 +32,6 @@ function renderProductGrid() {
     )
     .join('');
 
-  noResults.classList.toggle('d-none', filtered.length > 0);
-
   grid.querySelectorAll('.product-card').forEach((card) => {
     const open = () => openProductModal(Number(card.getAttribute('data-id')));
     card.addEventListener('click', open);
@@ -67,13 +41,18 @@ function renderProductGrid() {
   });
 }
 
+/* ---------- Shared product detail modal (products + the bundle) ---------- */
 function openProductModal(productId) {
   osSelectedProduct = OS_PRODUCTS.find((p) => p.id === productId);
   if (!osSelectedProduct) return;
   osModalQty = 1;
 
+  const isBundle = osSelectedProduct.category === 'bundle';
+
   document.getElementById('modalIcon').className = `bi ${osSelectedProduct.icon}`;
-  document.getElementById('modalCategory').textContent = osCategoryName(osSelectedProduct.category);
+  document.getElementById('modalCategory').textContent = isBundle
+    ? osT('bundle_offer')
+    : osCategoryName(osSelectedProduct.category);
   document.getElementById('modalName').textContent = osProductName(osSelectedProduct);
   document.getElementById('modalUnit').textContent = osProductUnit(osSelectedProduct);
   document.getElementById('modalDesc').textContent = osProductDesc(osSelectedProduct);
@@ -104,7 +83,76 @@ document.getElementById('addToCartBtn').addEventListener('click', () => {
   new bootstrap.Toast(document.getElementById('cartToast')).show();
 });
 
-document.getElementById('searchInput').addEventListener('input', renderProductGrid);
+/* ---------- Featured product hero ---------- */
+function renderFeatured() {
+  const p = OS_PRODUCTS.find((x) => x.id === OS_FEATURED_PRODUCT_ID);
+  if (!p) return;
+
+  const media = document.getElementById('featuredMedia');
+  const img = document.getElementById('featuredImg');
+  img.alt = osProductName(p);
+  img.addEventListener('error', () => media.classList.add('is-fallback'), { once: true });
+  img.src = `assets/img/featured/${p.id}.jpg`;
+
+  document.getElementById('featuredFallbackIcon').className = `bi ${p.icon} os-hero-fallback-icon`;
+  document.getElementById('featuredName').textContent = osProductName(p);
+  document.getElementById('featuredDesc').textContent = osProductDesc(p);
+  document.getElementById('featuredPrice').textContent = osFormatPrice(p.price);
+
+  document.getElementById('featuredSection').addEventListener('click', (e) => {
+    if (e.target.closest('#featuredAddBtn')) return;
+    openProductModal(p.id);
+  });
+  document.getElementById('featuredAddBtn').addEventListener('click', () => {
+    osAddToCart(p.id, 1);
+    new bootstrap.Toast(document.getElementById('cartToast')).show();
+  });
+}
+
+/* ---------- Bundle offer ---------- */
+function renderOffer() {
+  const bundle = OS_PRODUCTS.find((x) => x.id === OS_BUNDLE_PRODUCT_ID);
+  const items = OS_BUNDLE_ITEM_IDS.map((id) => OS_PRODUCTS.find((x) => x.id === id)).filter(Boolean);
+  if (!bundle || items.length < 2) return;
+
+  const regularPrice = items.reduce((sum, p) => sum + p.price, 0);
+  const saveAmount = regularPrice - bundle.price;
+
+  document.getElementById('offerItems').innerHTML = items
+    .map(
+      (p, i) =>
+        (i > 0 ? '<span class="os-offer-plus">+</span>' : '') +
+        `<span class="os-offer-item"><i class="bi ${p.icon}"></i>${osProductName(p)}</span>`
+    )
+    .join('');
+
+  document.getElementById('offerOldPrice').textContent = osFormatPrice(regularPrice);
+  document.getElementById('offerNewPrice').textContent = osFormatPrice(bundle.price);
+  document.getElementById('offerSave').textContent = `${osT('save_label')} ${osFormatPrice(saveAmount)}`;
+
+  document.getElementById('offerSection').addEventListener('click', (e) => {
+    if (e.target.closest('#offerAddBtn')) return;
+    openProductModal(bundle.id);
+  });
+  document.getElementById('offerAddBtn').addEventListener('click', () => {
+    osAddToCart(bundle.id, 1);
+    new bootstrap.Toast(document.getElementById('cartToast')).show();
+  });
+}
+
+renderFeatured();
+renderOffer();
+renderProductGrid();
+
+// Let keyboard users activate the hero / offer cards, same as product cards.
+[document.getElementById('featuredSection'), document.getElementById('offerSection')].forEach((section) => {
+  section.addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('button')) {
+      e.preventDefault();
+      section.click();
+    }
+  });
+});
 
 document.querySelectorAll('[data-lang]').forEach((el) => {
   el.addEventListener('click', () => {
@@ -112,6 +160,3 @@ document.querySelectorAll('[data-lang]').forEach((el) => {
     window.location.reload();
   });
 });
-
-renderCategoryChips();
-renderProductGrid();

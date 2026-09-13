@@ -88,7 +88,35 @@ const OS_PRODUCTS = [
     desc_en: 'A complete plant protein that cooks like rice in about 15 minutes. Works in salads, bowls, or as a side dish.',
     desc_ar: 'بروتين نباتي متكامل يُطهى مثل الأرز في حوالي 15 دقيقة. مناسب للسلطات والأطباق الجانبية.',
   },
+  {
+    // Bundle deal shown in the homepage "offer" card. It's a normal catalog
+    // entry (category 'bundle') so the existing cart/checkout code needs no
+    // changes — it's just excluded from the regular grid in main.js.
+    id: 101,
+    category: 'bundle',
+    icon: 'bi-gift-fill',
+    name_en: 'Green Tea + Chia Seeds Bundle', name_ar: 'حزمة الشاي الأخضر وبذور الشيا',
+    unit_en: '100g tea + 250g chia', unit_ar: '100 جم شاي + 250 جم شيا',
+    price: 230,
+    desc_en: 'Two of our most-loved staples together: a light, grassy green tea and a fiber-rich seed for your morning bowl. Bundled at a special price — 40 EGP less than buying them apart.',
+    desc_ar: 'اثنان من أكثر منتجاتنا محبة معًا: شاي أخضر بنكهة عشبية خفيفة، وبذور غنية بالألياف لطبق إفطارك. بسعر عرض خاص أقل بـ 40 جنيهًا من شرائهما منفصلين.',
+  },
 ];
+
+/* Product spotlighted in the homepage hero banner. Change this id to
+   feature a different product — its name, price, description, and fallback
+   icon are all pulled automatically from the entry above.
+   Drop a real photo at assets/img/featured/<id>.jpg to replace the icon
+   illustration (e.g. assets/img/featured/3.jpg for the id below); until
+   then the hero falls back to the product's icon gracefully. */
+const OS_FEATURED_PRODUCT_ID = 3;
+
+/* The two products that make up the homepage bundle offer, plus the id of
+   the combined product above that actually gets added to the cart. The
+   "regular price" shown crossed out is calculated from these automatically,
+   so it always matches OS_PRODUCTS if a price changes. */
+const OS_BUNDLE_ITEM_IDS = [7, 1];
+const OS_BUNDLE_PRODUCT_ID = 101;
 
 function osCategoryName(catId) {
   const c = OS_CATEGORIES.find((x) => x.id === catId);

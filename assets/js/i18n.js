@@ -2,7 +2,7 @@
 
 const OS_DICT = {
   en: {
-    app_name: "Organic Special",
+    app_name: "Special Organic",
     splash_tagline: "HEALTHY · ORGANIC · NATURAL",
     choose_language: "Choose your language",
     lang_en_native: "English",
@@ -14,6 +14,11 @@ const OS_DICT = {
     nav_cart: "Cart",
     search_placeholder: "Search products…",
     all_categories: "All",
+
+    staff_pick: "Staff pick",
+    bundle_offer: "Bundle offer",
+    save_label: "Save",
+    our_products: "Our products",
 
     add_to_cart: "Add to cart",
     quantity: "Quantity",
@@ -115,6 +120,11 @@ const OS_DICT = {
     nav_cart: "السلة",
     search_placeholder: "ابحث عن منتج…",
     all_categories: "الكل",
+
+    staff_pick: "اختيار المتجر",
+    bundle_offer: "عرض الحزمة",
+    save_label: "وفر",
+    our_products: "منتجاتنا",
 
     add_to_cart: "أضف إلى السلة",
     quantity: "الكمية",
