@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Organic Special — Cart</title>
+
+  <script src="assets/js/boot.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="icon" href="assets/img/logo.png">
+</head>
+<body>
+
+  <nav class="os-topbar navbar sticky-top py-2">
+    <div class="container d-flex align-items-center justify-content-between">
+      <a href="home.html" class="d-flex align-items-center gap-2 text-decoration-none">
+        <img src="assets/img/logo.png" class="os-logo-mark" alt="Organic Special">
+        <span class="brand-name d-none d-sm-inline" data-i18n="app_name">Organic Special</span>
+      </a>
+      <a href="home.html" class="btn btn-outline-forest rounded-pill px-3">
+        <i class="bi bi-arrow-left me-1" id="backArrowIcon"></i>
+        <span data-i18n="continue_shopping">Continue shopping</span>
+      </a>
+    </div>
+  </nav>
+
+  <main class="container py-4 max-w-720">
+    <h2 class="mb-4" data-i18n="cart_title">Your cart</h2>
+
+    <!-- Empty state -->
+    <div id="cartEmptyState" class="cart-empty d-none">
+      <i class="bi bi-basket3"></i>
+      <h5 class="mt-3" data-i18n="cart_empty_title">Your cart is empty</h5>
+      <p data-i18n="cart_empty_sub">Browse our products and add something healthy.</p>
+      <a href="home.html" class="btn btn-forest rounded-pill px-4 mt-2" data-i18n="continue_shopping">Continue shopping</a>
+    </div>
+
+    <!-- Cart + checkout -->
+    <div id="cartContent" class="d-none">
+      <div id="cartLines" class="d-flex flex-column gap-2 mb-4"></div>
+
+      <div class="cart-summary d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <div class="text-muted-soft small" data-i18n="items_count">Items</div>
+          <div class="fw-bold" id="summaryCount">0</div>
+        </div>
+        <div class="text-end">
+          <div class="text-muted-soft small" data-i18n="subtotal">Subtotal</div>
+          <div class="fw-bold fs-5 text-forest" id="summaryTotal">0</div>
+        </div>
+      </div>
+
+      <hr class="divider-sand">
+
+      <h5 class="mb-3" data-i18n="checkout_title">Delivery details</h5>
+      <form id="checkoutForm" novalidate>
+        <div class="mb-3">
+          <label class="form-label" data-i18n="full_name">Full name</label>
+          <input type="text" class="form-control" id="fullName" required data-i18n-placeholder="full_name_placeholder" placeholder="e.g. Ahmed Mohamed">
+          <div class="invalid-feedback" data-i18n="field_required">This field is required.</div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label" data-i18n="city">City</label>
+            <select class="form-select" id="citySelect" required>
+              <option value="" data-i18n="select_city">Select your city</option>
+            </select>
+            <div class="invalid-feedback" data-i18n="field_required">This field is required.</div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label" data-i18n="country">Country</label>
+            <input type="text" class="form-control" id="countryField" value="Egypt" disabled>
+          </div>
+        </div>
+
+        <div class="mb-1">
+          <label class="form-label" data-i18n="mobile_whatsapp">Mobile number (WhatsApp)</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-whatsapp text-success"></i></span>
+            <input type="tel" class="form-control" id="mobileWhatsapp" required placeholder="01xxxxxxxxx">
+          </div>
+          <div class="invalid-feedback" id="mobileWhatsappError" data-i18n="invalid_mobile">Enter a valid Egyptian mobile number.</div>
+        </div>
+        <p class="text-muted-soft small mb-3" data-i18n="mobile_whatsapp_hint">
+          We'll send your order confirmation on WhatsApp, so please make sure this number has WhatsApp.
+        </p>
+
+        <div class="mb-4">
+          <label class="form-label">
+            <span data-i18n="mobile_additional">Additional number</span>
+            <span class="text-muted-soft" data-i18n="mobile_additional_sub">(optional)</span>
+          </label>
+          <input type="tel" class="form-control" id="mobileAdditional" placeholder="01xxxxxxxxx">
+          <div class="invalid-feedback" data-i18n="invalid_mobile">Enter a valid Egyptian mobile number.</div>
+        </div>
+
+        <div id="orderErrorBox" class="alert alert-danger d-none" role="alert"></div>
+
+        <button type="submit" class="btn btn-forest w-100 py-2" id="placeOrderBtn">
+          <span data-i18n="place_order">Confirm order</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Success state -->
+    <div id="orderSuccessState" class="text-center py-5 d-none">
+      <i class="bi bi-check-circle text-forest" style="font-size:3.5rem;"></i>
+      <h4 class="mt-3" data-i18n="order_success_title">Order received</h4>
+      <p class="text-muted-soft" data-i18n="order_success_sub">Thanks! We'll contact you on WhatsApp shortly to confirm your order.</p>
+      <p class="fw-bold">
+        <span data-i18n="order_success_id">Order number</span>:
+        <span id="successOrderId" class="text-forest"></span>
+      </p>
+      <a href="home.html" class="btn btn-forest rounded-pill px-4 mt-2" data-i18n="back_to_home">Back to products</a>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/js/i18n.js"></script>
+  <script src="assets/js/products.js"></script>
+  <script src="assets/js/cart.js"></script>
+  <script src="assets/js/egypt-cities.js"></script>
+  <script src="assets/js/checkout.js"></script>
+</body>
+</html>

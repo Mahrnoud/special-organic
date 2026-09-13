@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Organic Special</title>
+
+  <script src="assets/js/boot.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="icon" href="assets/img/logo.png">
+</head>
+<body>
+
+  <!-- Splash: shown for ~3 seconds -->
+  <div id="splashScreen" class="os-splash">
+    <div class="text-center">
+      <img src="assets/img/logo.png" alt="Organic Special" class="os-splash-logo">
+      <div class="os-splash-tagline">HEALTHY · ORGANIC · NATURAL &nbsp;|&nbsp; صحي · عضوي · طبيعي</div>
+    </div>
+  </div>
+
+  <!-- Language selection: shown after splash -->
+  <div id="langScreen" class="os-lang-screen d-none">
+    <div class="os-lang-card">
+      <img src="assets/img/logo.png" alt="Organic Special" style="width:64px;" class="mb-4 d-block mx-auto rounded-3">
+      <p class="text-center mb-4" style="color:#cfe6cf; font-size:0.95rem;">
+        Choose your language &nbsp;/&nbsp; اختر لغتك
+      </p>
+
+      <button type="button" class="os-lang-option" data-lang="en">
+        <i class="bi bi-translate"></i>
+        <span>
+          <span class="lang-native">English</span>
+          <span class="lang-sub">Continue in English</span>
+        </span>
+      </button>
+
+      <button type="button" class="os-lang-option" data-lang="ar" dir="rtl">
+        <i class="bi bi-translate"></i>
+        <span>
+          <span class="lang-native">العربية</span>
+          <span class="lang-sub">المتابعة بالعربية</span>
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Show splash for 3 seconds, then reveal the language picker.
+    setTimeout(function () {
+      document.getElementById('splashScreen').classList.add('d-none');
+      document.getElementById('langScreen').classList.remove('d-none');
+    }, 3000);
+
+    document.querySelectorAll('.os-lang-option').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        localStorage.setItem('os_lang', btn.getAttribute('data-lang'));
+        window.location.href = 'home.html';
+      });
+    });
+  </script>
+</body>
+</html>

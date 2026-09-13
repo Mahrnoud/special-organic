@@ -1,0 +1,101 @@
+/* Organic Special — static product catalog.
+   Prices are in EGP. Icons come from Bootstrap Icons (no photos needed). */
+
+const OS_CATEGORIES = [
+  { id: 'seeds', en: 'Seeds', ar: 'بذور' },
+  { id: 'tea', en: 'Tea', ar: 'شاي' },
+  { id: 'grains', en: 'Grains', ar: 'حبوب' },
+];
+
+const OS_PRODUCTS = [
+  {
+    id: 1,
+    category: 'seeds',
+    icon: 'bi-flower1',
+    name_en: 'Chia Seeds', name_ar: 'بذور الشيا',
+    unit_en: '250g pack', unit_ar: 'عبوة 250 جم',
+    price: 150,
+    desc_en: 'Small black seeds packed with fiber and omega-3. Soak them in water or milk for a few minutes and add to breakfast bowls or smoothies.',
+    desc_ar: 'بذور سوداء صغيرة غنية بالألياف وأوميجا 3. انقعها في الماء أو اللبن لبضع دقائق وأضفها إلى الإفطار أو العصائر.',
+  },
+  {
+    id: 2,
+    category: 'seeds',
+    icon: 'bi-flower2',
+    name_en: 'Flax Seeds', name_ar: 'بذور الكتان',
+    unit_en: '250g pack', unit_ar: 'عبوة 250 جم',
+    price: 90,
+    desc_en: 'A pantry staple for a healthy digestive system. Grind before use to get the most benefit, and sprinkle over salads or oatmeal.',
+    desc_ar: 'أساسي صحي للجهاز الهضمي. يُفضل طحنها قبل الاستخدام والاستفادة الكاملة منها، ورشها على السلطة أو الشوفان.',
+  },
+  {
+    id: 3,
+    category: 'seeds',
+    icon: 'bi-flower3',
+    name_en: 'Black Seeds (Nigella)', name_ar: 'حبة البركة',
+    unit_en: '200g pack', unit_ar: 'عبوة 200 جم',
+    price: 110,
+    desc_en: 'Known as "the seed of blessing", used across the region for generations. A pinch goes well in bread dough, tea, or honey.',
+    desc_ar: 'تُعرف بحبة البركة، ومُستخدمة منذ أجيال في المنطقة. رشة منها تُضاف إلى عجين الخبز أو الشاي أو العسل.',
+  },
+  {
+    id: 4,
+    category: 'seeds',
+    icon: 'bi-basket2-fill',
+    name_en: 'Pumpkin Seeds', name_ar: 'بذور اليقطين',
+    unit_en: '250g pack', unit_ar: 'عبوة 250 جم',
+    price: 130,
+    desc_en: 'Lightly roasted, unsalted pumpkin seeds. A satisfying snack on their own, or a crunchy topping for soups and salads.',
+    desc_ar: 'بذور يقطين محمصة قليلاً وغير مملحة. مقرمشات شهية بمفردها، أو إضافة مقرمشة على الشوربة والسلطة.',
+  },
+  {
+    id: 5,
+    category: 'seeds',
+    icon: 'bi-sun-fill',
+    name_en: 'Sunflower Seeds', name_ar: 'بذور دوار الشمس',
+    unit_en: '250g pack', unit_ar: 'عبوة 250 جم',
+    price: 70,
+    desc_en: 'Raw, shelled sunflower seeds with a mild nutty taste. Great mixed into granola or bread dough.',
+    desc_ar: 'بذور دوار الشمس مقشرة وطبيعية بطعم جوزي خفيف. رائعة عند خلطها بالجرانولا أو عجين الخبز.',
+  },
+  {
+    id: 6,
+    category: 'seeds',
+    icon: 'bi-droplet-fill',
+    name_en: 'Sesame Seeds', name_ar: 'بذور السمسم',
+    unit_en: '250g pack', unit_ar: 'عبوة 250 جم',
+    price: 85,
+    desc_en: 'Hulled white sesame seeds, cleaned and ready to use for tahini, baking, or topping breads and salads.',
+    desc_ar: 'بذور سمسم أبيض مقشر ونظيف وجاهز للاستخدام في الطحينة أو الخبيز أو تزيين الخبز والسلطات.',
+  },
+  {
+    id: 7,
+    category: 'tea',
+    icon: 'bi-cup-hot-fill',
+    name_en: 'Green Tea', name_ar: 'الشاي الأخضر',
+    unit_en: '100g loose leaf', unit_ar: '100 جم أوراق فضفاضة',
+    price: 120,
+    desc_en: 'Whole-leaf green tea with a light, grassy flavor. Steep for 2–3 minutes in water just off the boil.',
+    desc_ar: 'أوراق شاي أخضر كاملة بنكهة خفيفة عشبية. يُنقع لمدة 2-3 دقائق في ماء ساخن غير مغلي تمامًا.',
+  },
+  {
+    id: 8,
+    category: 'grains',
+    icon: 'bi-tree-fill',
+    name_en: 'Quinoa', name_ar: 'الكينوا',
+    unit_en: '500g pack', unit_ar: 'عبوة 500 جم',
+    price: 180,
+    desc_en: 'A complete plant protein that cooks like rice in about 15 minutes. Works in salads, bowls, or as a side dish.',
+    desc_ar: 'بروتين نباتي متكامل يُطهى مثل الأرز في حوالي 15 دقيقة. مناسب للسلطات والأطباق الجانبية.',
+  },
+];
+
+function osCategoryName(catId) {
+  const c = OS_CATEGORIES.find((x) => x.id === catId);
+  if (!c) return catId;
+  return osLang() === 'ar' ? c.ar : c.en;
+}
+
+function osProductName(p) { return osLang() === 'ar' ? p.name_ar : p.name_en; }
+function osProductUnit(p) { return osLang() === 'ar' ? p.unit_ar : p.unit_en; }
+function osProductDesc(p) { return osLang() === 'ar' ? p.desc_ar : p.desc_en; }

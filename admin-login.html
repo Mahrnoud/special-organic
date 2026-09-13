@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Organic Special — Admin</title>
+
+  <script src="assets/js/boot.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="icon" href="assets/img/logo.png">
+</head>
+<body>
+
+  <div class="auth-shell">
+    <div class="auth-card">
+      <div class="text-center mb-4">
+        <img src="assets/img/logo.png" alt="Organic Special" style="width:56px;" class="rounded-3 mb-3">
+        <h4 data-i18n="admin_login_title">Admin login</h4>
+        <p class="text-muted-soft small" data-i18n="admin_login_sub">Sign in to view incoming orders.</p>
+      </div>
+
+      <form id="adminLoginForm" novalidate>
+        <div class="mb-3">
+          <label class="form-label" data-i18n="phone_number">Phone number</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+            <input type="tel" class="form-control" id="adminPhone" required placeholder="01xxxxxxxxx">
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" data-i18n="password">Password</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+            <input type="password" class="form-control" id="adminPassword" required>
+          </div>
+        </div>
+
+        <div id="loginErrorBox" class="alert alert-danger py-2 d-none" role="alert" data-i18n="login_error"></div>
+
+        <button type="submit" class="btn btn-forest w-100 py-2" id="adminLoginBtn">
+          <span data-i18n="login_btn">Sign in</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script src="assets/js/i18n.js"></script>
+  <script src="assets/js/admin-login.js"></script>
+</body>
+</html>

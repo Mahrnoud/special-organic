@@ -1,0 +1,32 @@
+/* Egypt's governorates, used as the "City" choices at checkout.
+   Country is always Egypt and is not user-editable. */
+
+const OS_EGYPT_CITIES = [
+  { en: 'Cairo', ar: 'القاهرة' },
+  { en: 'Giza', ar: 'الجيزة' },
+  { en: 'Alexandria', ar: 'الإسكندرية' },
+  { en: 'Qalyubia', ar: 'القليوبية' },
+  { en: 'Port Said', ar: 'بورسعيد' },
+  { en: 'Suez', ar: 'السويس' },
+  { en: 'Dakahlia', ar: 'الدقهلية' },
+  { en: 'Sharqia', ar: 'الشرقية' },
+  { en: 'Gharbia', ar: 'الغربية' },
+  { en: 'Monufia', ar: 'المنوفية' },
+  { en: 'Beheira', ar: 'البحيرة' },
+  { en: 'Ismailia', ar: 'الإسماعيلية' },
+  { en: 'Fayoum', ar: 'الفيوم' },
+  { en: 'Beni Suef', ar: 'بني سويف' },
+  { en: 'Minya', ar: 'المنيا' },
+  { en: 'Asyut', ar: 'أسيوط' },
+  { en: 'Sohag', ar: 'سوهاج' },
+  { en: 'Qena', ar: 'قنا' },
+  { en: 'Luxor', ar: 'الأقصر' },
+  { en: 'Aswan', ar: 'أسوان' },
+  { en: 'Red Sea', ar: 'البحر الأحمر' },
+  { en: 'New Valley', ar: 'الوادي الجديد' },
+  { en: 'Matrouh', ar: 'مطروح' },
+  { en: 'North Sinai', ar: 'شمال سيناء' },
+  { en: 'South Sinai', ar: 'جنوب سيناء' },
+  { en: 'Kafr El Sheikh', ar: 'كفر الشيخ' },
+  { en: 'Damietta', ar: 'دمياط' },
+];

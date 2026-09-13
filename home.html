@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Organic Special — Products</title>
+
+  <script src="assets/js/boot.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="icon" href="assets/img/logo.png">
+</head>
+<body>
+
+  <!-- Top bar -->
+  <nav class="os-topbar navbar sticky-top py-2">
+    <div class="container d-flex align-items-center justify-content-between">
+      <a href="home.html" class="d-flex align-items-center gap-2 text-decoration-none">
+        <img src="assets/img/logo.png" class="os-logo-mark" alt="Organic Special">
+        <span class="brand-name d-none d-sm-inline" data-i18n="app_name">Organic Special</span>
+      </a>
+
+      <div class="d-flex align-items-center gap-2">
+        <div class="dropdown">
+          <button class="btn btn-outline-forest btn-sm rounded-pill" data-bs-toggle="dropdown" aria-expanded="false" title="Language">
+            <i class="bi bi-globe2"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><button class="dropdown-item" data-lang="en">English</button></li>
+            <li><button class="dropdown-item" data-lang="ar">العربية</button></li>
+          </ul>
+        </div>
+        <a href="cart.html" class="btn btn-forest os-cart-btn rounded-pill px-3">
+          <i class="bi bi-basket3"></i>
+          <span data-i18n="nav_cart">Cart</span>
+          <span class="os-cart-count" data-cart-count>0</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container py-4">
+    <!-- Search -->
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <div class="input-group">
+          <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+          <input type="text" id="searchInput" class="form-control border-start-0" data-i18n-placeholder="search_placeholder" placeholder="Search products…">
+        </div>
+      </div>
+    </div>
+
+    <!-- Category chips -->
+    <div class="d-flex gap-2 mb-4 overflow-auto pb-1" id="categoryChips"></div>
+
+    <!-- Product grid -->
+    <div class="row g-3" id="productGrid"></div>
+
+    <div id="noResults" class="text-center text-muted-soft py-5 d-none">
+      <i class="bi bi-search fs-1"></i>
+      <p class="mt-2" data-i18n="no_orders_found">No results.</p>
+    </div>
+  </main>
+
+  <!-- Product detail modal -->
+  <div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header border-0 pb-0">
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body pt-0">
+          <div class="product-modal-icon mb-3">
+            <i class="bi" id="modalIcon"></i>
+          </div>
+          <span class="badge bg-white border text-forest mb-2" id="modalCategory"></span>
+          <h4 id="modalName"></h4>
+          <p class="text-muted-soft small mb-2" id="modalUnit"></p>
+          <p id="modalDesc" class="mb-3"></p>
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div>
+              <span class="fw-bold fs-5 text-forest" id="modalPrice"></span>
+            </div>
+            <div class="text-end">
+              <div class="text-muted-soft small mb-1" data-i18n="quantity">Quantity</div>
+              <div class="qty-stepper">
+                <button type="button" id="qtyMinus" aria-label="Decrease quantity">−</button>
+                <input type="text" id="qtyInput" value="1" inputmode="numeric" aria-label="Quantity">
+                <button type="button" id="qtyPlus" aria-label="Increase quantity">+</button>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="btn btn-forest w-100 py-2" id="addToCartBtn">
+            <i class="bi bi-basket3 me-1"></i>
+            <span data-i18n="add_to_cart">Add to cart</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast: added to cart -->
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+    <div id="cartToast" class="toast align-items-center text-white bg-forest border-0" role="status" aria-live="polite" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body">
+          <i class="bi bi-check-circle me-1"></i>
+          <span data-i18n="added_to_cart">Added to cart</span>
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/js/i18n.js"></script>
+  <script src="assets/js/products.js"></script>
+  <script src="assets/js/cart.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
