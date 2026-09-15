@@ -56,7 +56,6 @@ function osApplySiteInfo() {
   document.querySelectorAll('[data-site="hours"]').forEach((el) => {
     el.textContent = lang === 'ar' ? OS_SITE_INFO.hours_ar : OS_SITE_INFO.hours_en;
   });
-  document.querySelectorAll('[data-site="map-frame"]').forEach((el) => { el.src = OS_SITE_INFO.mapEmbedUrl; });
   document.querySelectorAll('[data-site="facebook"]').forEach((el) => { el.href = OS_SITE_INFO.social.facebook; });
   document.querySelectorAll('[data-site="instagram"]').forEach((el) => { el.href = OS_SITE_INFO.social.instagram; });
   document.querySelectorAll('[data-site="whatsapp"]').forEach((el) => { el.href = OS_SITE_INFO.social.whatsapp; });

@@ -14,6 +14,15 @@
 </head>
 <body>
 
+  <div id="homeLoader" class="os-splash os-home-loader" role="status" aria-live="polite">
+    <div class="text-center">
+      <img src="assets/img/logo.png" alt="Organic Special" class="os-splash-logo" width="150" height="150">
+      <div class="os-splash-tagline" id="homeLoadingLabel">Loading…</div>
+      <div class="os-loading-track" aria-hidden="true"><span></span></div>
+    </div>
+  </div>
+  <script src="assets/js/home-loader.js"></script>
+
   <!-- Announcement bar -->
   <div class="os-announce">
     <div class="container" data-i18n="announce_bar">Fresh, organic and delivered across Egypt</div>
@@ -231,15 +240,8 @@
             </a>
           </div>
 
-          <div class="os-map-wrap">
-            <iframe
-              class="os-map-frame"
-              data-site="map-frame"
-              src="https://www.google.com/maps?q=Cairo,Egypt&z=12&output=embed"
-              loading="lazy"
-              referrerpolicy="no-referrer-when-downgrade"
-              title="Store location on the map">
-            </iframe>
+          <div class="os-contact-logo-wrap">
+            <img class="os-contact-logo" src="assets/img/logo.png" alt="Organic Special" loading="lazy">
           </div>
         </div>
       </div>

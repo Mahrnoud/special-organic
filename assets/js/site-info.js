@@ -1,6 +1,6 @@
 /* Organic Special — store contact & social details.
    Edit the values below and every place that shows a phone number,
-   email, address or map (the contact section, the trust bar, and the
+   email or address (the contact section, the trust bar, and the
    footer) updates automatically. Nothing here needs to match the
    checkout WhatsApp number — this is just how customers reach you. */
 
@@ -19,11 +19,6 @@ const OS_SITE_INFO = {
 
   hours_en: 'Saturday – Thursday, 10:00 AM – 8:00 PM',
   hours_ar: 'السبت - الخميس، ١٠:٠٠ ص - ٨:٠٠ م',
-
-  // Basic embed, no Google API key required. To point it at a precise
-  // address instead of just "Cairo", replace the q= value, e.g.
-  // q=30.0444,31.2357 for exact coordinates, or q=Your+Shop+Name+Cairo.
-  mapEmbedUrl: 'https://www.google.com/maps?q=Cairo,Egypt&z=12&output=embed',
 
   social: {
     facebook: '#',

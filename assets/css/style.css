@@ -225,6 +225,47 @@ a:focus-visible, [role="button"]:focus-visible {
 }
 @keyframes osFadeIn { to { opacity: 1; } }
 
+/* Home loading screen: replay on every visit and refresh. */
+.os-home-loader {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  transition: opacity 0.3s ease;
+}
+body.os-home-loading { overflow: hidden; }
+.os-home-loading .os-home-loader { display: flex; }
+.os-home-loading:not(.os-home-revealing) > :not(.os-home-loader) { visibility: hidden; }
+.os-home-revealing .os-home-loader { opacity: 0; }
+.os-loading-track {
+  width: 150px;
+  height: 3px;
+  margin: 20px auto 0;
+  overflow: hidden;
+  border-radius: var(--os-radius-pill);
+  background: rgba(199, 221, 91, 0.2);
+}
+.os-loading-track span {
+  display: block;
+  height: 100%;
+  background: var(--os-lime);
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: osLoadingProgress 2.7s linear forwards;
+}
+[dir="rtl"] .os-loading-track span { transform-origin: right; }
+@keyframes osLoadingProgress { to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .os-home-loader { transition: none; }
+  .os-home-loader .os-splash-logo,
+  .os-home-loader .os-splash-tagline,
+  .os-loading-track span {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* Language picker (appears after splash, same dark canvas) */
 .os-lang-screen {
   min-height: 100vh;
@@ -235,20 +276,25 @@ a:focus-visible, [role="button"]:focus-visible {
 }
 .os-lang-card {
   width: 100%;
-  max-width: 460px;
+  max-width: 420px;
   padding: 0 1rem;
+}
+.os-lang-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
 }
 .os-lang-option {
   display: flex;
   align-items: center;
-  gap: 14px;
+  justify-content: center;
+  gap: 8px;
   width: 100%;
   background: rgba(247, 244, 234, 0.06);
   border: 1px solid rgba(199, 221, 91, 0.35);
   color: var(--os-white);
   border-radius: var(--os-radius-tile);
-  padding: 18px 20px;
-  margin-bottom: 14px;
+  padding: 12px 10px;
   text-align: start;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
@@ -258,16 +304,16 @@ a:focus-visible, [role="button"]:focus-visible {
   color: var(--os-white);
 }
 .os-lang-option .bi {
-  font-size: 1.4rem;
+  font-size: 1.15rem;
   color: var(--os-lime);
 }
 .os-lang-option .lang-native {
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   display: block;
 }
 .os-lang-option .lang-sub {
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   color: #c9d9c3;
 }
 
@@ -774,14 +820,22 @@ a:focus-visible, [role="button"]:focus-visible {
 .os-contact-list strong { display: block; color: var(--os-forest-dark); font-size: 0.82rem; }
 .os-contact-list span, .os-contact-list a { color: var(--os-ink); text-decoration: none; font-size: 0.92rem; }
 .os-contact-list a:hover { color: var(--os-forest); }
-.os-map-wrap {
+.os-contact-logo-wrap {
+  position: relative;
   border-radius: 20px;
   overflow: hidden;
   border: 1px solid var(--os-sand-line);
   box-shadow: var(--os-shadow);
   min-height: 320px;
 }
-.os-map-frame { width: 100%; height: 100%; min-height: 320px; border: 0; display: block; }
+.os-contact-logo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
 
 @media (max-width: 767.98px) {
   .os-contact-grid { grid-template-columns: 1fr; }
