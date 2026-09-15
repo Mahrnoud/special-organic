@@ -166,28 +166,52 @@ a:focus-visible, [role="button"]:focus-visible {
 
 /* Mobile menu */
 .os-burger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
   background: none;
   border: none;
   font-size: 1.6rem;
   line-height: 1;
   color: var(--os-forest-dark);
   padding: 2px 6px;
+  border-radius: 10px;
 }
+.os-burger:hover, .os-burger[aria-expanded="true"] { background: var(--os-sand); }
 .os-mobile-nav {
   display: none;
+  position: absolute;
+  top: 100%;
+  inset-inline: 0;
+  width: 100%;
   flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px 12px;
+  max-height: calc(100dvh - 80px);
+  overflow-y: auto;
   background: var(--os-white);
   border-top: 1px solid var(--os-sand-line);
+  border-radius: 0 0 16px 16px;
+  box-shadow: var(--os-shadow);
 }
-.os-mobile-nav.show { display: flex; }
+@media (max-width: 991.98px) {
+  .os-mobile-nav.show { display: flex; }
+}
 .os-mobile-nav a {
+  display: block;
+  min-height: 44px;
   padding: 0.7rem 1.25rem;
   color: var(--os-ink);
   text-decoration: none;
   font-weight: 600;
-  border-bottom: 1px solid var(--os-sand-line);
+  border-radius: 8px;
 }
-.os-mobile-nav a:last-child { border-bottom: none; }
+.os-mobile-nav a:hover,
+.os-mobile-nav a:focus-visible,
+.os-mobile-nav a.active { background: var(--os-sand); color: var(--os-forest); }
 
 /* =========================================================
    Splash screen
@@ -632,6 +656,7 @@ body.os-home-loading { overflow: hidden; }
   height: 100%;
   object-fit: contain;
   opacity: 0;
+  border-radius: 16px;
 }
 .os-photo.is-loaded img { opacity: 1; }
 .os-photo.is-loaded > .bi { visibility: hidden; }
@@ -663,7 +688,7 @@ body.os-home-loading { overflow: hidden; }
   align-items: center;
   justify-content: center;
   position: relative;
-  height: 130px;
+  height: 180px;
   padding: 0;
   overflow: hidden;
 }
@@ -867,7 +892,9 @@ body.os-home-loading { overflow: hidden; }
    Footer
    ========================================================= */
 .os-footer { background: var(--os-forest-dark); color: #c3d6bc; }
-.os-footer-top { padding: 3rem 0 2rem; }
+.os-footer-top { padding-block: 3rem 2rem; }
+.os-footer a, .os-contact-list a, .os-trust-sub { overflow-wrap: anywhere; }
+.os-contact-list li > :last-child, .os-trust-item > :last-child { min-width: 0; }
 .os-footer h6 { color: var(--os-white); font-weight: 700; font-size: 0.85rem; margin-bottom: 1.1rem; letter-spacing: 0.3px; }
 .os-footer-desc { font-size: 0.88rem; color: #b7ccae; max-width: 32ch; margin-bottom: 1.1rem; }
 .os-footer a {

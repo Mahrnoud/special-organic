@@ -7,10 +7,32 @@
 /* ---------- Mobile menu ---------- */
 const osNavBurger = document.getElementById('navBurger');
 const osMobileNav = document.getElementById('mobileNav');
+function osSetMobileNav(isOpen) {
+  if (!osNavBurger || !osMobileNav) return;
+  osMobileNav.classList.toggle('show', isOpen);
+  osNavBurger.setAttribute('aria-expanded', String(isOpen));
+  const icon = osNavBurger.querySelector('.bi');
+  icon?.classList.toggle('bi-list', !isOpen);
+  icon?.classList.toggle('bi-x-lg', isOpen);
+}
 if (osNavBurger && osMobileNav) {
   osNavBurger.addEventListener('click', () => {
-    const isOpen = osMobileNav.classList.toggle('show');
-    osNavBurger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    osSetMobileNav(!osMobileNav.classList.contains('show'));
+  });
+  osMobileNav.querySelectorAll('a').forEach((link) => {
+    link.addEventListener('click', () => osSetMobileNav(false));
+  });
+  document.addEventListener('click', (event) => {
+    if (!osMobileNav.contains(event.target) && !osNavBurger.contains(event.target)) osSetMobileNav(false);
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && osMobileNav.classList.contains('show')) {
+      osSetMobileNav(false);
+      osNavBurger.focus();
+    }
+  });
+  window.matchMedia('(min-width: 992px)').addEventListener('change', (event) => {
+    if (event.matches) osSetMobileNav(false);
   });
 }
 
@@ -21,14 +43,13 @@ document.querySelectorAll('a[href^="#"]').forEach((link) => {
     const target = targetId.length > 1 ? document.querySelector(targetId) : null;
     if (!target) return; // not an in-page anchor on this page — let it behave normally
     e.preventDefault();
+    osSetMobileNav(false);
     const header = document.querySelector('.os-topbar');
     const offset = (header ? header.offsetHeight : 0) + 16;
     window.scrollTo({
       top: target.getBoundingClientRect().top + window.scrollY - offset,
-      behavior: 'smooth',
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
     });
-    osMobileNav?.classList.remove('show');
-    osNavBurger?.setAttribute('aria-expanded', 'false');
   });
 });
 
@@ -80,8 +101,11 @@ if (osNavSections.length > 0) {
     osNavSections.forEach((section) => {
       if (section.getBoundingClientRect().top - offset <= 0) current = section.id;
     });
-    document.querySelectorAll('.os-nav-link').forEach((link) => {
-      link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+    document.querySelectorAll('.os-nav-link, .os-mobile-nav a').forEach((link) => {
+      const isCurrent = link.getAttribute('href') === '#' + current;
+      link.classList.toggle('active', isCurrent);
+      if (isCurrent) link.setAttribute('aria-current', 'location');
+      else link.removeAttribute('aria-current');
     });
   };
   document.addEventListener('scroll', osSpy, { passive: true });

@@ -172,7 +172,7 @@ const OS_DICT = {
   },
 
   ar: {
-    app_name: "أورجانيك سبيشال",
+    app_name: "سبيشال أورجانيك",
     splash_tagline: "صحي · عضوي · طبيعي",
     choose_language: "اختر لغتك",
     lang_en_native: "English",
