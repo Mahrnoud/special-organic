@@ -83,7 +83,7 @@ document.getElementById('addToCartBtn').addEventListener('click', () => {
   new bootstrap.Toast(document.getElementById('cartToast')).show();
 });
 
-/* ---------- Featured product hero ---------- */
+/* ---------- Featured product hero (slide 1 of the hero slider) ---------- */
 function renderFeatured() {
   const p = OS_PRODUCTS.find((x) => x.id === OS_FEATURED_PRODUCT_ID);
   if (!p) return;
@@ -109,7 +109,7 @@ function renderFeatured() {
   });
 }
 
-/* ---------- Bundle offer ---------- */
+/* ---------- Bundle offer (bottom-right ticket next to the slider) ---------- */
 function renderOffer() {
   const bundle = OS_PRODUCTS.find((x) => x.id === OS_BUNDLE_PRODUCT_ID);
   const items = OS_BUNDLE_ITEM_IDS.map((id) => OS_PRODUCTS.find((x) => x.id === id)).filter(Boolean);
@@ -140,23 +140,45 @@ function renderOffer() {
   });
 }
 
+/* ---------- Hero slider (cycles between the slides inside #heroSlider) ---------- */
+let osHeroIndex = 0;
+let osHeroTimer = null;
+
+function showHeroSlide(index) {
+  const slides = document.querySelectorAll('#heroSlider .os-hero-slide');
+  if (!slides.length) return;
+  osHeroIndex = (index + slides.length) % slides.length;
+  slides.forEach((slide, i) => slide.classList.toggle('os-hero-slide-active', i === osHeroIndex));
+  document.querySelectorAll('#heroDots .os-hero-dot').forEach((dot, i) => dot.classList.toggle('active', i === osHeroIndex));
+}
+
+function initHeroSlider() {
+  const slides = document.querySelectorAll('#heroSlider .os-hero-slide');
+  const dotsWrap = document.getElementById('heroDots');
+  if (!slides.length || !dotsWrap) return;
+
+  dotsWrap.innerHTML = '';
+  slides.forEach((_, i) => {
+    const dot = document.createElement('button');
+    dot.type = 'button';
+    dot.className = 'os-hero-dot' + (i === 0 ? ' active' : '');
+    dot.setAttribute('aria-label', `Slide ${i + 1}`);
+    dot.addEventListener('click', () => { showHeroSlide(i); restartHeroAutoplay(); });
+    dotsWrap.appendChild(dot);
+  });
+
+  document.getElementById('heroPrev')?.addEventListener('click', () => { showHeroSlide(osHeroIndex - 1); restartHeroAutoplay(); });
+  document.getElementById('heroNext')?.addEventListener('click', () => { showHeroSlide(osHeroIndex + 1); restartHeroAutoplay(); });
+
+  restartHeroAutoplay();
+}
+
+function restartHeroAutoplay() {
+  if (osHeroTimer) clearInterval(osHeroTimer);
+  osHeroTimer = setInterval(() => showHeroSlide(osHeroIndex + 1), 7000);
+}
+
 renderFeatured();
 renderOffer();
 renderProductGrid();
-
-// Let keyboard users activate the hero / offer cards, same as product cards.
-[document.getElementById('featuredSection'), document.getElementById('offerSection')].forEach((section) => {
-  section.addEventListener('keydown', (e) => {
-    if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('button')) {
-      e.preventDefault();
-      section.click();
-    }
-  });
-});
-
-document.querySelectorAll('[data-lang]').forEach((el) => {
-  el.addEventListener('click', () => {
-    osSetLang(el.getAttribute('data-lang'));
-    window.location.reload();
-  });
-});
+initHeroSlider();

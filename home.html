@@ -14,15 +14,36 @@
 </head>
 <body>
 
+  <!-- Announcement bar -->
+  <div class="os-announce">
+    <div class="container" data-i18n="announce_bar">Fresh, organic and delivered across Egypt</div>
+  </div>
+
   <!-- Top bar -->
   <nav class="os-topbar navbar sticky-top py-2">
     <div class="container d-flex align-items-center justify-content-between">
-      <a href="home.html" class="d-flex align-items-center gap-2 text-decoration-none">
+      <a href="#topSection" class="d-flex align-items-center gap-2 text-decoration-none os-brand">
         <img src="assets/img/logo.png" class="os-logo-mark" alt="Special Organic">
-        <span class="brand-name d-none d-sm-inline" data-i18n="app_name">Special Organic</span>
+        <span class="brand-name-wrap d-none d-sm-flex flex-column">
+          <span class="brand-name" data-i18n="app_name">Special Organic</span>
+          <span class="brand-sub" data-i18n="brand_sub">ORGANIC STORE</span>
+        </span>
       </a>
 
+      <ul class="os-nav-links d-none d-lg-flex align-items-center mb-0 list-unstyled">
+        <li><a href="#topSection" class="os-nav-link active" data-i18n="nav_home_link">Home</a></li>
+        <li><a href="#productsSection" class="os-nav-link" data-i18n="nav_products_link">Products</a></li>
+        <li><a href="#aboutSection" class="os-nav-link" data-i18n="nav_about_link">About</a></li>
+        <li><a href="#contactSection" class="os-nav-link" data-i18n="nav_contact_link">Contact</a></li>
+      </ul>
+
       <div class="d-flex align-items-center gap-2">
+        <div class="os-social d-none d-md-flex align-items-center gap-2">
+          <a href="#" class="os-social-btn" data-site="facebook" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+          <a href="#" class="os-social-btn" data-site="instagram" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+          <a href="#" class="os-social-btn" data-site="whatsapp" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+        </div>
+
         <div class="dropdown">
           <button class="btn btn-outline-forest btn-sm rounded-pill" data-bs-toggle="dropdown" aria-expanded="false" title="Language">
             <i class="bi bi-globe2"></i>
@@ -32,59 +53,304 @@
             <li><button class="dropdown-item" data-lang="ar">العربية</button></li>
           </ul>
         </div>
+
         <a href="cart.html" class="btn btn-forest os-cart-btn rounded-pill px-3">
           <i class="bi bi-basket3"></i>
           <span data-i18n="nav_cart">Cart</span>
           <span class="os-cart-count" data-cart-count>0</span>
         </a>
+
+        <button type="button" class="os-burger d-lg-none" id="navBurger" aria-label="Menu" aria-expanded="false">
+          <i class="bi bi-list"></i>
+        </button>
       </div>
+    </div>
+
+    <div class="os-mobile-nav" id="mobileNav">
+      <a href="#topSection" data-i18n="nav_home_link">Home</a>
+      <a href="#productsSection" data-i18n="nav_products_link">Products</a>
+      <a href="#aboutSection" data-i18n="nav_about_link">About</a>
+      <a href="#contactSection" data-i18n="nav_contact_link">Contact</a>
     </div>
   </nav>
 
-  <main class="container py-4">
+  <main>
 
-    <!-- Featured product -->
-    <section class="os-hero mb-4" id="featuredSection" role="button" tabindex="0" aria-label="View featured product">
-      <div class="os-hero-media" id="featuredMedia">
-        <img id="featuredImg" alt="">
-        <i class="bi os-hero-fallback-icon" id="featuredFallbackIcon"></i>
-      </div>
-      <div class="os-hero-content">
-        <span class="os-hero-badge" data-i18n="staff_pick">Staff pick</span>
-        <h2 class="os-hero-name" id="featuredName"></h2>
-        <p class="os-hero-desc" id="featuredDesc"></p>
-        <div class="os-hero-footer">
-          <span class="os-hero-price" id="featuredPrice"></span>
-          <button type="button" class="btn btn-forest rounded-pill px-4" id="featuredAddBtn">
-            <i class="bi bi-basket3 me-1"></i><span data-i18n="add_to_cart">Add to cart</span>
-          </button>
+    <!-- Hero: slider + two stacked side panels -->
+    <section id="topSection" class="os-hero-section">
+      <div class="container">
+        <div class="os-hero-grid">
+
+          <div class="os-hero-slider" id="heroSlider">
+
+            <!-- Slide 1: featured product (dynamic, from products.js) -->
+            <div class="os-hero os-hero-slide os-hero-slide-active" id="featuredSection" role="button" tabindex="0" aria-label="View featured product">
+              <div class="os-hero-media" id="featuredMedia">
+                <img id="featuredImg" alt="">
+                <i class="bi os-hero-fallback-icon" id="featuredFallbackIcon"></i>
+              </div>
+              <div class="os-hero-content">
+                <span class="os-hero-badge" data-i18n="staff_pick">Staff pick</span>
+                <h2 class="os-hero-name" id="featuredName"></h2>
+                <p class="os-hero-desc" id="featuredDesc"></p>
+                <div class="os-hero-footer">
+                  <span class="os-hero-price" id="featuredPrice"></span>
+                  <button type="button" class="btn btn-forest rounded-pill px-4" id="featuredAddBtn">
+                    <i class="bi bi-basket3 me-1"></i><span data-i18n="add_to_cart">Add to cart</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Slide 2: static brand message -->
+            <div class="os-hero os-hero-slide os-hero-slide-static">
+              <div class="os-hero-content">
+                <span class="os-hero-badge" data-i18n="hero_slide2_badge">Pure &amp; natural</span>
+                <h2 class="os-hero-name" data-i18n="hero_slide2_title">Fresh From Nature To Your Door</h2>
+                <p class="os-hero-desc" data-i18n="hero_slide2_desc">Seeds, tea and grains sourced with care, packed the same week they're ordered, and delivered anywhere in Egypt.</p>
+                <div class="os-hero-footer">
+                  <a href="#productsSection" class="btn btn-forest rounded-pill px-4" data-i18n="shop_now">Shop now</a>
+                </div>
+              </div>
+              <div class="os-hero-media">
+                <i class="bi bi-basket3-fill os-hero-fallback-icon"></i>
+              </div>
+            </div>
+
+            <div class="os-hero-controls">
+              <div class="os-hero-dots" id="heroDots"></div>
+              <button type="button" class="os-hero-arrow" id="heroPrev" aria-label="Previous slide"><i class="bi bi-arrow-left"></i></button>
+              <button type="button" class="os-hero-arrow" id="heroNext" aria-label="Next slide"><i class="bi bi-arrow-right"></i></button>
+            </div>
+          </div>
+
+          <div class="os-hero-right">
+            <a href="#productsSection" class="os-discover text-decoration-none">
+              <i class="bi bi-flower1 os-discover-icon"></i>
+              <span class="os-hero-badge" data-i18n="discover_badge">Discover</span>
+              <h3 class="os-discover-title" data-i18n="discover_title">Discover Real Organic Flavors</h3>
+              <p class="os-discover-desc" data-i18n="discover_desc">No additives, no shortcuts — just honest ingredients for your kitchen.</p>
+              <span class="os-discover-link" data-i18n="learn_more">Learn more</span>
+            </a>
+
+            <!-- Bundle offer -->
+            <section class="os-offer" id="offerSection" role="button" tabindex="0" aria-label="View bundle offer">
+              <div class="os-offer-info">
+                <span class="os-offer-badge"><i class="bi bi-gift-fill"></i> <span data-i18n="bundle_offer">Bundle offer</span></span>
+                <div class="os-offer-items" id="offerItems"></div>
+              </div>
+              <div class="os-offer-deal">
+                <div class="os-offer-prices">
+                  <span class="os-offer-old" id="offerOldPrice"></span>
+                  <span class="os-offer-new" id="offerNewPrice"></span>
+                </div>
+                <div class="os-offer-save" id="offerSave"></div>
+                <button type="button" class="btn btn-forest rounded-pill px-4 mt-2" id="offerAddBtn">
+                  <i class="bi bi-basket3 me-1"></i><span data-i18n="add_to_cart">Add to cart</span>
+                </button>
+              </div>
+            </section>
+          </div>
+
         </div>
       </div>
     </section>
 
-    <!-- Bundle offer -->
-    <section class="os-offer mb-4" id="offerSection" role="button" tabindex="0" aria-label="View bundle offer">
-      <div class="os-offer-info">
-        <span class="os-offer-badge"><i class="bi bi-gift-fill"></i> <span data-i18n="bundle_offer">Bundle offer</span></span>
-        <div class="os-offer-items" id="offerItems"></div>
-      </div>
-      <div class="os-offer-deal">
-        <div class="os-offer-prices">
-          <span class="os-offer-old" id="offerOldPrice"></span>
-          <span class="os-offer-new" id="offerNewPrice"></span>
-        </div>
-        <div class="os-offer-save" id="offerSave"></div>
-        <button type="button" class="btn btn-forest rounded-pill px-4 mt-2" id="offerAddBtn">
-          <i class="bi bi-basket3 me-1"></i><span data-i18n="add_to_cart">Add to cart</span>
-        </button>
+    <!-- Products -->
+    <section id="productsSection" class="py-4">
+      <div class="container">
+        <h5 class="mb-3" data-i18n="our_products">Our products</h5>
+        <div class="row g-3" id="productGrid"></div>
       </div>
     </section>
 
-    <h5 class="mb-3" data-i18n="our_products">Our products</h5>
+    <!-- About -->
+    <section id="aboutSection" class="os-about">
+      <div class="container">
+        <div class="os-about-header">
+          <span class="os-hero-badge" data-i18n="about_badge">Who we are</span>
+          <h2 class="mt-2" data-i18n="about_title">A small shop, grown from a simple idea</h2>
+          <p class="os-about-desc" data-i18n="about_desc">Special Organic started as a search for cleaner ingredients for our own kitchen. Today we pack and ship seeds, tea and grains straight from Cairo, with nothing added and nothing hidden about where it comes from.</p>
+        </div>
+        <div class="os-about-grid">
+          <div class="os-about-card">
+            <div class="os-about-card-icon"><i class="bi bi-flower2"></i></div>
+            <h6 data-i18n="about_point1_title">Organic sourcing</h6>
+            <p data-i18n="about_point1_desc">Every product is chosen for what it doesn't contain as much as what it does.</p>
+          </div>
+          <div class="os-about-card">
+            <div class="os-about-card-icon"><i class="bi bi-box-seam"></i></div>
+            <h6 data-i18n="about_point2_title">Fresh on every order</h6>
+            <p data-i18n="about_point2_desc">We pack in small batches so nothing sits on a shelf for long.</p>
+          </div>
+          <div class="os-about-card">
+            <div class="os-about-card-icon"><i class="bi bi-geo-alt"></i></div>
+            <h6 data-i18n="about_point3_title">Local &amp; responsive</h6>
+            <p data-i18n="about_point3_desc">Based in Cairo, reachable on WhatsApp for any question about your order.</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
-    <!-- Product grid -->
-    <div class="row g-3" id="productGrid"></div>
+    <!-- Contact -->
+    <section id="contactSection" class="os-contact">
+      <div class="container">
+        <div class="os-contact-grid">
+          <div>
+            <h2 data-i18n="contact_title">Get in touch</h2>
+            <p class="text-muted-soft" data-i18n="contact_desc">Questions about a product or an order? Reach us any of these ways, or send your order details straight to WhatsApp.</p>
+
+            <ul class="os-contact-list">
+              <li>
+                <div class="os-contact-icon"><i class="bi bi-geo-alt"></i></div>
+                <div>
+                  <strong data-i18n="contact_address_label">Address</strong>
+                  <span data-site="address">Cairo, Egypt</span>
+                </div>
+              </li>
+              <li>
+                <div class="os-contact-icon"><i class="bi bi-telephone"></i></div>
+                <div>
+                  <strong data-i18n="contact_phone_label">Phone / WhatsApp</strong>
+                  <a href="tel:+201000000000" data-site="phone-href"><span data-site="phone">01000000000</span></a>
+                </div>
+              </li>
+              <li>
+                <div class="os-contact-icon"><i class="bi bi-envelope"></i></div>
+                <div>
+                  <strong data-i18n="contact_email_label">Email</strong>
+                  <a href="mailto:hello@organicspecial.example" data-site="email-href"><span data-site="email">hello@organicspecial.example</span></a>
+                </div>
+              </li>
+              <li>
+                <div class="os-contact-icon"><i class="bi bi-clock"></i></div>
+                <div>
+                  <strong data-i18n="contact_hours_label">Hours</strong>
+                  <span data-site="hours">Saturday – Thursday, 10:00 AM – 8:00 PM</span>
+                </div>
+              </li>
+            </ul>
+
+            <a class="btn btn-forest rounded-pill px-4" target="_blank" rel="noopener" data-site="whatsapp-href" href="https://wa.me/201000000000">
+              <i class="bi bi-whatsapp me-1"></i><span data-i18n="contact_whatsapp_btn">Message us on WhatsApp</span>
+            </a>
+          </div>
+
+          <div class="os-map-wrap">
+            <iframe
+              class="os-map-frame"
+              data-site="map-frame"
+              src="https://www.google.com/maps?q=Cairo,Egypt&z=12&output=embed"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              title="Store location on the map">
+            </iframe>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
+
+  <!-- Trust bar -->
+  <div class="os-trust-bar">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-6 col-md-3">
+          <div class="os-trust-item">
+            <div class="os-trust-icon"><i class="bi bi-truck"></i></div>
+            <div>
+              <div class="os-trust-title" data-i18n="features_shipping_title">Fast delivery</div>
+              <div class="os-trust-sub" data-i18n="features_shipping_sub">Across Cairo &amp; Giza</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="os-trust-item">
+            <div class="os-trust-icon"><i class="bi bi-telephone"></i></div>
+            <div>
+              <div class="os-trust-title" data-i18n="features_call_title">Call us</div>
+              <div class="os-trust-sub"><a href="tel:+201000000000" data-site="phone-href"><span data-site="phone">01000000000</span></a></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="os-trust-item">
+            <div class="os-trust-icon"><i class="bi bi-envelope"></i></div>
+            <div>
+              <div class="os-trust-title" data-i18n="features_email_title">Email us</div>
+              <div class="os-trust-sub"><a href="mailto:hello@organicspecial.example" data-site="email-href"><span data-site="email">hello@organicspecial.example</span></a></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="os-trust-item">
+            <div class="os-trust-icon"><i class="bi bi-patch-check"></i></div>
+            <div>
+              <div class="os-trust-title" data-i18n="features_community_title">Trusted quality</div>
+              <div class="os-trust-sub" data-i18n="features_community_sub">Checked before every order ships</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="os-footer">
+    <div class="container os-footer-top">
+      <div class="row g-4">
+        <div class="col-6 col-lg-3">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <img src="assets/img/logo.png" class="os-logo-mark" alt="Special Organic">
+            <span class="fw-bold text-white" data-i18n="app_name">Special Organic</span>
+          </div>
+          <p class="os-footer-desc" data-i18n="footer_about_desc">Organic seeds, tea and grains, packed fresh and delivered across Egypt. No middlemen, no filler ingredients.</p>
+          <div class="os-footer-social">
+            <a href="#" data-site="facebook" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+            <a href="#" data-site="instagram" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+            <a href="#" data-site="whatsapp" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+          </div>
+        </div>
+
+        <div class="col-6 col-lg-3">
+          <h6 data-i18n="footer_information_heading">Information</h6>
+          <a href="#topSection" data-i18n="footer_link_home">Home</a>
+          <a href="#aboutSection" data-i18n="footer_link_about">About us</a>
+          <a href="#productsSection" data-i18n="footer_link_products">Our products</a>
+          <a href="#contactSection" data-i18n="footer_link_contact">Contact us</a>
+          <a href="admin-login.html" data-i18n="footer_link_admin">Admin login</a>
+        </div>
+
+        <div class="col-6 col-lg-3">
+          <h6 data-i18n="footer_categories_heading">Categories</h6>
+          <div id="footerCategories"></div>
+        </div>
+
+        <div class="col-6 col-lg-3">
+          <h6 data-i18n="footer_contact_heading">Get in touch</h6>
+          <p class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-geo-alt"></i><span data-site="address">Cairo, Egypt</span></p>
+          <p class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-telephone"></i><a href="tel:+201000000000" data-site="phone-href"><span data-site="phone">01000000000</span></a></p>
+          <p class="d-flex align-items-center gap-2 mb-0"><i class="bi bi-envelope"></i><a href="mailto:hello@organicspecial.example" data-site="email-href"><span data-site="email">hello@organicspecial.example</span></a></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="os-footer-bottom">
+        <div>
+          © <span data-current-year></span> <span data-i18n="app_name">Special Organic</span>.
+          <span data-i18n="footer_rights">All rights reserved.</span>
+          <span data-i18n="footer_made_in">Packed with care in Cairo, Egypt.</span>
+        </div>
+        <div class="os-payment-badges">
+          <span class="os-payment-badge" data-i18n="payment_cod">Cash on delivery</span>
+          <span class="os-payment-badge" data-i18n="payment_vodafone">Vodafone Cash</span>
+          <span class="os-payment-badge" data-i18n="payment_instapay">InstaPay</span>
+        </div>
+      </div>
+    </div>
+  </footer>
 
   <!-- Product detail modal -->
   <div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
@@ -140,6 +406,18 @@
   <script src="assets/js/i18n.js"></script>
   <script src="assets/js/products.js"></script>
   <script src="assets/js/cart.js"></script>
+  <script src="assets/js/site-info.js"></script>
+  <script src="assets/js/nav.js"></script>
   <script src="assets/js/main.js"></script>
+  <script>
+    // Categories list in the footer — pulled from products.js so it stays
+    // in sync with OS_CATEGORIES automatically, in both languages.
+    (function renderFooterCategories() {
+      const wrap = document.getElementById('footerCategories');
+      if (!wrap || typeof OS_CATEGORIES === 'undefined') return;
+      const links = OS_CATEGORIES.map((c) => `<a href="#productsSection">${osLang() === 'ar' ? c.ar : c.en}</a>`).join('');
+      wrap.innerHTML = links + `<a href="#productsSection">${osT('footer_cat_bundles')}</a>`;
+    })();
+  </script>
 </body>
 </html>

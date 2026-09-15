@@ -105,6 +105,70 @@ const OS_DICT = {
     nothing_to_export: "There's nothing to export for the current filters.",
     egypt: "Egypt",
     currency: "EGP",
+
+    /* ----- Header ----- */
+    announce_bar: "Fresh, organic and delivered across Egypt",
+    brand_sub: "ORGANIC STORE",
+    nav_home_link: "Home",
+    nav_products_link: "Products",
+    nav_about_link: "About",
+    nav_contact_link: "Contact",
+    shop_now: "Shop now",
+
+    /* ----- Hero slider ----- */
+    hero_slide2_badge: "Pure & natural",
+    hero_slide2_title: "Fresh From Nature To Your Door",
+    hero_slide2_desc: "Seeds, tea and grains sourced with care, packed the same week they're ordered, and delivered anywhere in Egypt.",
+
+    discover_badge: "Discover",
+    discover_title: "Discover Real Organic Flavors",
+    discover_desc: "No additives, no shortcuts — just honest ingredients for your kitchen.",
+    learn_more: "Learn more",
+
+    /* ----- Trust / contact bar ----- */
+    features_shipping_title: "Fast delivery",
+    features_shipping_sub: "Across Cairo & Giza",
+    features_call_title: "Call us",
+    features_email_title: "Email us",
+    features_community_title: "Trusted quality",
+    features_community_sub: "Checked before every order ships",
+
+    /* ----- About ----- */
+    about_badge: "Who we are",
+    about_title: "A small shop, grown from a simple idea",
+    about_desc: "Special Organic started as a search for cleaner ingredients for our own kitchen. Today we pack and ship seeds, tea and grains straight from Cairo, with nothing added and nothing hidden about where it comes from.",
+    about_point1_title: "Organic sourcing",
+    about_point1_desc: "Every product is chosen for what it doesn't contain as much as what it does.",
+    about_point2_title: "Fresh on every order",
+    about_point2_desc: "We pack in small batches so nothing sits on a shelf for long.",
+    about_point3_title: "Local & responsive",
+    about_point3_desc: "Based in Cairo, reachable on WhatsApp for any question about your order.",
+
+    /* ----- Contact ----- */
+    contact_title: "Get in touch",
+    contact_desc: "Questions about a product or an order? Reach us any of these ways, or send your order details straight to WhatsApp.",
+    contact_address_label: "Address",
+    contact_phone_label: "Phone / WhatsApp",
+    contact_email_label: "Email",
+    contact_hours_label: "Hours",
+    contact_whatsapp_btn: "Message us on WhatsApp",
+
+    /* ----- Footer ----- */
+    footer_about_desc: "Organic seeds, tea and grains, packed fresh and delivered across Egypt. No middlemen, no filler ingredients.",
+    footer_information_heading: "Information",
+    footer_categories_heading: "Categories",
+    footer_contact_heading: "Get in touch",
+    footer_link_home: "Home",
+    footer_link_about: "About us",
+    footer_link_products: "Our products",
+    footer_link_contact: "Contact us",
+    footer_link_admin: "Admin login",
+    footer_cat_bundles: "Bundle offers",
+    footer_rights: "All rights reserved.",
+    footer_made_in: "Packed with care in Cairo, Egypt.",
+    payment_cod: "Cash on delivery",
+    payment_vodafone: "Vodafone Cash",
+    payment_instapay: "InstaPay",
   },
 
   ar: {
@@ -211,6 +275,70 @@ const OS_DICT = {
     nothing_to_export: "لا توجد بيانات لتصديرها في ظل الفلاتر الحالية.",
     egypt: "مصر",
     currency: "جنيه",
+
+    /* ----- Header ----- */
+    announce_bar: "منتجات طازجة وعضوية، توصيل لكل محافظات مصر",
+    brand_sub: "متجر عضوي",
+    nav_home_link: "الرئيسية",
+    nav_products_link: "المنتجات",
+    nav_about_link: "من نحن",
+    nav_contact_link: "تواصل معنا",
+    shop_now: "تسوق الآن",
+
+    /* ----- Hero slider ----- */
+    hero_slide2_badge: "طبيعي ١٠٠٪",
+    hero_slide2_title: "من الطبيعة إلى باب بيتك",
+    hero_slide2_desc: "بذور وشاي وحبوب نختارها بعناية، تُعبأ في نفس أسبوع الطلب، وتصل إلى أي مكان في مصر.",
+
+    discover_badge: "اكتشف",
+    discover_title: "اكتشف نكهات عضوية حقيقية",
+    discover_desc: "بدون إضافات وبدون اختصارات — مكونات صادقة لمطبخك.",
+    learn_more: "اعرف أكثر",
+
+    /* ----- Trust / contact bar ----- */
+    features_shipping_title: "توصيل سريع",
+    features_shipping_sub: "لكل أنحاء القاهرة والجيزة",
+    features_call_title: "اتصل بنا",
+    features_email_title: "راسلنا بالإيميل",
+    features_community_title: "جودة موثوقة",
+    features_community_sub: "تُفحص قبل شحن كل طلب",
+
+    /* ----- About ----- */
+    about_badge: "من نحن",
+    about_title: "متجر صغير، بدأ من فكرة بسيطة",
+    about_desc: "بدأت أورجانيك سبيشال كبحث عن مكونات أنظف لمطبخنا الخاص. اليوم نُعبئ ونشحن البذور والشاي والحبوب مباشرة من القاهرة، بدون أي إضافات وبدون إخفاء مصدرها.",
+    about_point1_title: "مصادر عضوية",
+    about_point1_desc: "نختار كل منتج بناءً على ما لا يحتويه بقدر ما يحتويه.",
+    about_point2_title: "طازج مع كل طلب",
+    about_point2_desc: "نُعبئ بكميات صغيرة حتى لا يبقى شيء على الرف لفترة طويلة.",
+    about_point3_title: "محلي وسريع الاستجابة",
+    about_point3_desc: "مقرّنا في القاهرة، ومتاحون على واتساب لأي استفسار عن طلبك.",
+
+    /* ----- Contact ----- */
+    contact_title: "تواصل معنا",
+    contact_desc: "عندك سؤال عن منتج أو طلب؟ تواصل معنا بأي من هذه الطرق، أو أرسل تفاصيل طلبك مباشرة على واتساب.",
+    contact_address_label: "العنوان",
+    contact_phone_label: "الموبايل / واتساب",
+    contact_email_label: "البريد الإلكتروني",
+    contact_hours_label: "مواعيد العمل",
+    contact_whatsapp_btn: "راسلنا على واتساب",
+
+    /* ----- Footer ----- */
+    footer_about_desc: "بذور وشاي وحبوب عضوية، تُعبأ طازجة وتُشحن لكل أنحاء مصر. بدون وسطاء وبدون مكونات حشو.",
+    footer_information_heading: "معلومات",
+    footer_categories_heading: "الأقسام",
+    footer_contact_heading: "تواصل معنا",
+    footer_link_home: "الرئيسية",
+    footer_link_about: "من نحن",
+    footer_link_products: "منتجاتنا",
+    footer_link_contact: "تواصل معنا",
+    footer_link_admin: "دخول المسؤول",
+    footer_cat_bundles: "عروض الحزم",
+    footer_rights: "جميع الحقوق محفوظة.",
+    footer_made_in: "يُعبأ بعناية في القاهرة، مصر.",
+    payment_cod: "الدفع عند الاستلام",
+    payment_vodafone: "فودافون كاش",
+    payment_instapay: "إنستاباي",
   },
 };
 
