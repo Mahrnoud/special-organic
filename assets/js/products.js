@@ -1,5 +1,5 @@
 /* Organic Special — static product catalog.
-   Prices are in EGP. Icons come from Bootstrap Icons (no photos needed). */
+   Prices are in EGP. Local photos are optional; icons remain as fallbacks. */
 
 const OS_CATEGORIES = [
   { id: 'seeds', en: 'Seeds', ar: 'بذور' },
@@ -10,6 +10,7 @@ const OS_CATEGORIES = [
 const OS_PRODUCTS = [
   {
     id: 1,
+    image: 'assets/img/products/1.jpg',
     category: 'seeds',
     icon: 'bi-flower1',
     name_en: 'Chia Seeds', name_ar: 'بذور الشيا',
@@ -20,6 +21,7 @@ const OS_PRODUCTS = [
   },
   {
     id: 2,
+    image: 'assets/img/products/2.jpg',
     category: 'seeds',
     icon: 'bi-flower2',
     name_en: 'Flax Seeds', name_ar: 'بذور الكتان',
@@ -30,6 +32,7 @@ const OS_PRODUCTS = [
   },
   {
     id: 3,
+    image: 'assets/img/products/3.jpg',
     category: 'seeds',
     icon: 'bi-flower3',
     name_en: 'Black Seeds (Nigella)', name_ar: 'حبة البركة',
@@ -40,6 +43,7 @@ const OS_PRODUCTS = [
   },
   {
     id: 4,
+    image: 'assets/img/products/4.jpg',
     category: 'seeds',
     icon: 'bi-basket2-fill',
     name_en: 'Pumpkin Seeds', name_ar: 'بذور اليقطين',
@@ -50,6 +54,7 @@ const OS_PRODUCTS = [
   },
   {
     id: 5,
+    image: 'assets/img/products/5.jpg',
     category: 'seeds',
     icon: 'bi-sun-fill',
     name_en: 'Sunflower Seeds', name_ar: 'بذور دوار الشمس',
@@ -60,6 +65,7 @@ const OS_PRODUCTS = [
   },
   {
     id: 6,
+    image: 'assets/img/products/6.jpg',
     category: 'seeds',
     icon: 'bi-droplet-fill',
     name_en: 'Sesame Seeds', name_ar: 'بذور السمسم',
@@ -70,6 +76,7 @@ const OS_PRODUCTS = [
   },
   {
     id: 7,
+    image: 'assets/img/products/7.jpg',
     category: 'tea',
     icon: 'bi-cup-hot-fill',
     name_en: 'Green Tea', name_ar: 'الشاي الأخضر',
@@ -80,6 +87,7 @@ const OS_PRODUCTS = [
   },
   {
     id: 8,
+    image: 'assets/img/products/8.jpg',
     category: 'grains',
     icon: 'bi-tree-fill',
     name_en: 'Quinoa', name_ar: 'الكينوا',
@@ -103,12 +111,8 @@ const OS_PRODUCTS = [
   },
 ];
 
-/* Product spotlighted in the homepage hero banner. Change this id to
-   feature a different product — its name, price, description, and fallback
-   icon are all pulled automatically from the entry above.
-   Drop a real photo at assets/img/featured/<id>.jpg to replace the icon
-   illustration (e.g. assets/img/featured/3.jpg for the id below); until
-   then the hero falls back to the product's icon gracefully. */
+/* Change this id to feature another product. Its photo, name, price,
+   description, and fallback icon come from the catalog entry above. */
 const OS_FEATURED_PRODUCT_ID = 3;
 
 /* The two products that make up the homepage bundle offer, plus the id of
@@ -127,3 +131,38 @@ function osCategoryName(catId) {
 function osProductName(p) { return osLang() === 'ar' ? p.name_ar : p.name_en; }
 function osProductUnit(p) { return osLang() === 'ar' ? p.unit_ar : p.unit_en; }
 function osProductDesc(p) { return osLang() === 'ar' ? p.desc_ar : p.desc_en; }
+
+/* Shared image markup. Bind handlers before assigning src so even cached
+   failures keep the icon visible, without showing a broken-image symbol. */
+function osImageAttribute(value) {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[char]));
+}
+
+function osImageMarkup(src, alt, icon, lazy = true) {
+  return `<span class="os-photo">
+    <i class="bi ${osImageAttribute(icon)}" aria-hidden="true"></i>
+    ${src ? `<img data-photo-src="${osImageAttribute(src)}" alt="${osImageAttribute(alt)}" loading="${lazy ? 'lazy' : 'eager'}" decoding="async">` : ''}
+  </span>`;
+}
+
+function osProductMediaMarkup(product, lazy = true) {
+  if (product.id === OS_BUNDLE_PRODUCT_ID) {
+    return `<span class="os-product-pair">${OS_BUNDLE_ITEM_IDS
+      .map((id) => OS_PRODUCTS.find((p) => p.id === id))
+      .filter(Boolean)
+      .map((p) => osImageMarkup(p.image, osProductName(p), p.icon, lazy))
+      .join('')}</span>`;
+  }
+  return osImageMarkup(product.image, osProductName(product), product.icon, lazy);
+}
+
+function osLoadImages(root) {
+  root.querySelectorAll('img[data-photo-src]').forEach((img) => {
+    img.addEventListener('load', () => img.parentElement.classList.add('is-loaded'));
+    img.addEventListener('error', () => img.parentElement.classList.remove('is-loaded'));
+    img.src = img.dataset.photoSrc;
+    img.removeAttribute('data-photo-src');
+  });
+}

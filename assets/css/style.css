@@ -295,7 +295,15 @@ a:focus-visible, [role="button"]:focus-visible {
   box-shadow: var(--os-shadow);
   cursor: pointer;
 }
-.os-hero-slide { display: none; }
+.os-hero-slide {
+  display: none;
+  background-image: linear-gradient(rgb(255 255 255 / 86%), rgb(255 255 255 / 86%)), var(--os-slide-background);
+  background-size: cover;
+  background-position: center;
+  padding-bottom: 5.75rem;
+}
+#featuredSection { --os-slide-background: url('../img/hero/slide-1-bg.jpg'); }
+.os-hero-slide-static { --os-slide-background: url('../img/hero/slide-2-bg.jpg'); }
 .os-hero-slide.os-hero-slide-active { display: flex; }
 .os-hero-slide-static { cursor: default; }
 
@@ -311,21 +319,8 @@ a:focus-visible, [role="button"]:focus-visible {
   justify-content: center;
   overflow: hidden;
 }
-.os-hero-media img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: 1;
-}
-.os-hero-media.is-fallback img { display: none; }
-.os-hero-fallback-icon {
-  position: relative;
-  z-index: 0;
-  font-size: 5rem;
-  color: var(--os-forest);
-}
+.os-hero-media .os-photo img { object-fit: cover; }
+.os-hero-media .bi { font-size: 5rem; color: var(--os-forest); }
 .os-hero-content { flex: 1; min-width: 0; }
 .os-hero-badge {
   display: inline-block;
@@ -498,6 +493,7 @@ a:focus-visible, [role="button"]:focus-visible {
   color: var(--os-forest-dark);
 }
 .os-offer-item .bi { color: var(--os-forest); font-size: 1rem; }
+.os-offer-item > .os-photo { width: 24px; height: 24px; flex: 0 0 24px; }
 .os-offer-plus {
   font-weight: 700;
   color: var(--os-forest);
@@ -549,7 +545,7 @@ a:focus-visible, [role="button"]:focus-visible {
 }
 
 @media (max-width: 767.98px) {
-  .os-hero { flex-direction: column; text-align: center; padding: 1.5rem; }
+  .os-hero { flex-direction: column; text-align: center; padding: 1.5rem 1.5rem 5.75rem; }
   .os-hero-media { width: 180px; height: 180px; flex-basis: auto; }
   .os-hero-footer { justify-content: center; }
   .os-hero-desc { max-width: 100%; }
@@ -572,6 +568,34 @@ a:focus-visible, [role="button"]:focus-visible {
 /* =========================================================
    Product grid
    ========================================================= */
+/* Image boxes reserve their space while loading or showing fallback icons. */
+.os-photo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+.os-photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0;
+}
+.os-photo.is-loaded img { opacity: 1; }
+.os-photo.is-loaded > .bi { visibility: hidden; }
+.os-product-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+}
 .product-card {
   background: #fbfbfb;
   /*border: 1px solid var(--os-sand-line);*/
@@ -592,8 +616,14 @@ a:focus-visible, [role="button"]:focus-visible {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem 1rem;
   position: relative;
+  height: 130px;
+  padding: 0;
+  overflow: hidden;
+}
+.product-card .product-media .os-photo img {
+  object-fit: cover;
+  object-position: center;
 }
 .product-card .product-media .bi {
   font-size: 2.75rem;
@@ -601,6 +631,7 @@ a:focus-visible, [role="button"]:focus-visible {
 }
 .product-card .product-category-tag {
   position: absolute;
+  z-index: 1;
   top: 10px;
   inset-inline-start: 10px;
   background: var(--os-forest);
@@ -638,7 +669,13 @@ a:focus-visible, [role="button"]:focus-visible {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: 0;
+  height: 220px;
+  overflow: hidden;
+}
+.product-modal-icon .os-photo img {
+  object-fit: cover;
+  object-position: center;
 }
 .product-modal-icon .bi { font-size: 4rem; color: var(--os-forest); }
 .qty-stepper {
@@ -838,6 +875,7 @@ a:focus-visible, [role="button"]:focus-visible {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  overflow: hidden;
 }
 .cart-line .cart-line-icon .bi { font-size: 1.5rem; color: var(--os-forest); }
 .cart-summary {

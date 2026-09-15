@@ -20,7 +20,7 @@ function renderProductGrid() {
       <div class="product-card" data-id="${p.id}" tabindex="0" role="button" aria-label="${osProductName(p)}">
         <div class="product-media">
           <span class="product-category-tag">${osCategoryName(p.category)}</span>
-          <i class="bi ${p.icon}"></i>
+          ${osProductMediaMarkup(p)}
         </div>
         <div class="product-body">
           <div class="product-name">${osProductName(p)}</div>
@@ -32,6 +32,7 @@ function renderProductGrid() {
     )
     .join('');
 
+  osLoadImages(grid);
   grid.querySelectorAll('.product-card').forEach((card) => {
     const open = () => openProductModal(Number(card.getAttribute('data-id')));
     card.addEventListener('click', open);
@@ -49,7 +50,9 @@ function openProductModal(productId) {
 
   const isBundle = osSelectedProduct.category === 'bundle';
 
-  document.getElementById('modalIcon').className = `bi ${osSelectedProduct.icon}`;
+  const media = document.getElementById('modalMedia');
+  media.innerHTML = osProductMediaMarkup(osSelectedProduct, false);
+  osLoadImages(media);
   document.getElementById('modalCategory').textContent = isBundle
     ? osT('bundle_offer')
     : osCategoryName(osSelectedProduct.category);
@@ -89,12 +92,8 @@ function renderFeatured() {
   if (!p) return;
 
   const media = document.getElementById('featuredMedia');
-  const img = document.getElementById('featuredImg');
-  img.alt = osProductName(p);
-  img.addEventListener('error', () => media.classList.add('is-fallback'), { once: true });
-  img.src = `assets/img/featured/${p.id}.jpg`;
-
-  document.getElementById('featuredFallbackIcon').className = `bi ${p.icon} os-hero-fallback-icon`;
+  media.innerHTML = osProductMediaMarkup(p, false);
+  osLoadImages(media);
   document.getElementById('featuredName').textContent = osProductName(p);
   document.getElementById('featuredDesc').textContent = osProductDesc(p);
   document.getElementById('featuredPrice').textContent = osFormatPrice(p.price);
@@ -102,6 +101,12 @@ function renderFeatured() {
   document.getElementById('featuredSection').addEventListener('click', (e) => {
     if (e.target.closest('#featuredAddBtn')) return;
     openProductModal(p.id);
+  });
+  document.getElementById('featuredSection').addEventListener('keydown', (e) => {
+    if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      openProductModal(p.id);
+    }
   });
   document.getElementById('featuredAddBtn').addEventListener('click', () => {
     osAddToCart(p.id, 1);
@@ -122,9 +127,11 @@ function renderOffer() {
     .map(
       (p, i) =>
         (i > 0 ? '<span class="os-offer-plus">+</span>' : '') +
-        `<span class="os-offer-item"><i class="bi ${p.icon}"></i>${osProductName(p)}</span>`
+        `<span class="os-offer-item">${osProductMediaMarkup(p)}${osProductName(p)}</span>`
     )
     .join('');
+
+  osLoadImages(document.getElementById('offerItems'));
 
   document.getElementById('offerOldPrice').textContent = osFormatPrice(regularPrice);
   document.getElementById('offerNewPrice').textContent = osFormatPrice(bundle.price);
@@ -177,6 +184,10 @@ function restartHeroAutoplay() {
   if (osHeroTimer) clearInterval(osHeroTimer);
   osHeroTimer = setInterval(() => showHeroSlide(osHeroIndex + 1), 7000);
 }
+
+const brandMedia = document.getElementById('brandMedia');
+brandMedia.innerHTML = osImageMarkup('assets/img/hero/slide-2-image.jpg', osT('hero_slide2_title'), 'bi-basket3-fill', false);
+osLoadImages(brandMedia);
 
 renderFeatured();
 renderOffer();

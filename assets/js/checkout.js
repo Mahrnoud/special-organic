@@ -35,7 +35,7 @@ function renderCart() {
     .map(
       (l) => `
     <div class="cart-line d-flex align-items-center gap-3" data-id="${l.id}">
-      <div class="cart-line-icon"><i class="bi ${l.product.icon}"></i></div>
+      <div class="cart-line-icon">${osProductMediaMarkup(l.product)}</div>
       <div class="flex-grow-1">
         <div class="fw-bold">${osProductName(l.product)}</div>
         <div class="text-muted-soft small">${osFormatPrice(l.product.price)} <span data-i18n="each">each</span></div>
@@ -53,6 +53,7 @@ function renderCart() {
     )
     .join('');
   osApplyI18n(wrap);
+  osLoadImages(wrap);
 
   wrap.querySelectorAll('.cart-line').forEach((row) => {
     const id = Number(row.getAttribute('data-id'));

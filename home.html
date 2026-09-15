@@ -85,10 +85,7 @@
 
             <!-- Slide 1: featured product (dynamic, from products.js) -->
             <div class="os-hero os-hero-slide os-hero-slide-active" id="featuredSection" role="button" tabindex="0" aria-label="View featured product">
-              <div class="os-hero-media" id="featuredMedia">
-                <img id="featuredImg" alt="">
-                <i class="bi os-hero-fallback-icon" id="featuredFallbackIcon"></i>
-              </div>
+              <div class="os-hero-media" id="featuredMedia"></div>
               <div class="os-hero-content">
                 <span class="os-hero-badge" data-i18n="staff_pick">Staff pick</span>
                 <h2 class="os-hero-name" id="featuredName"></h2>
@@ -112,9 +109,7 @@
                   <a href="#productsSection" class="btn btn-forest rounded-pill px-4" data-i18n="shop_now">Shop now</a>
                 </div>
               </div>
-              <div class="os-hero-media">
-                <i class="bi bi-basket3-fill os-hero-fallback-icon"></i>
-              </div>
+              <div class="os-hero-media" id="brandMedia"></div>
             </div>
 
             <div class="os-hero-controls">
@@ -360,9 +355,7 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body pt-0">
-          <div class="product-modal-icon mb-3">
-            <i class="bi" id="modalIcon"></i>
-          </div>
+          <div class="product-modal-icon mb-3" id="modalMedia"></div>
           <span class="badge bg-white border text-forest mb-2" id="modalCategory"></span>
           <h4 id="modalName"></h4>
           <p class="text-muted-soft small mb-2" id="modalUnit"></p>

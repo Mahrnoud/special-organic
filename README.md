@@ -18,7 +18,10 @@ organic-special/
 ├── assets/
 │   ├── css/style.css        All styling (colors, fonts, layout)
 │   ├── js/                  i18n, product data, cart, page logic
-│   └── img/logo.png         Your logo
+│   └── img/                 Logo and optional photos
+│       ├── logo.png         Your logo
+│       ├── products/        Product photos named by catalog ID
+│       └── hero/            Slide backgrounds and second-slide photo
 ├── api/                     PHP backend (talks to the SQLite database)
 │   ├── config.php           Sessions + JSON response helpers
 │   ├── db.php                Opens/creates database/store.db and its tables
@@ -34,6 +37,45 @@ organic-special/
 └── tools/
     └── set_admin_password.php   CLI helper to create/change an admin login
 ```
+
+## Adding your photos
+
+Copy your photos into the folders below. Filenames are case-sensitive on
+most hosting servers. Missing or failed product photos show the existing
+icons; missing slide backgrounds leave the original white background.
+
+| File | Used for |
+| --- | --- |
+| `assets/img/products/1.jpg` | Chia Seeds |
+| `assets/img/products/2.jpg` | Flax Seeds |
+| `assets/img/products/3.jpg` | Black Seeds (Nigella), including the current featured slide |
+| `assets/img/products/4.jpg` | Pumpkin Seeds |
+| `assets/img/products/5.jpg` | Sunflower Seeds |
+| `assets/img/products/6.jpg` | Sesame Seeds |
+| `assets/img/products/7.jpg` | Green Tea |
+| `assets/img/products/8.jpg` | Quinoa |
+| `assets/img/hero/slide-1-bg.jpg` | Featured slide background |
+| `assets/img/hero/slide-2-bg.jpg` | Second slide background |
+| `assets/img/hero/slide-2-image.jpg` | Second slide's small photo inside the organic shape |
+
+Product photos are shared by cards, popups, the featured slide, bundle
+offer, and cart. The bundle shows the tea and chia photos side by side;
+it does not need a separate image file.
+
+Use square product photos (about 800 × 800 pixels), a square second-slide
+photo, and wide backgrounds (about 1600 × 1000 pixels). Product card and popup photos,
+shaped slide photos, and backgrounds are cropped to fill their image areas.
+Bundle offer and cart photos are contained within their boxes.
+Keep the main subject near the center. Backgrounds
+have a light overlay so headings and buttons stay readable.
+
+To use PNG, WebP, or another filename, change the product's `image` value
+in `assets/js/products.js`, the second slide's image path next to
+`brandMedia` in `assets/js/main.js`, or the `--os-slide-background` URLs
+in `assets/css/style.css`. CSS URLs are relative to the CSS folder
+(`../img/hero/...`); JavaScript paths are relative to the page
+(`assets/img/...`). Set a product's `image` to an empty string to use
+only its icon. Changing `OS_FEATURED_PRODUCT_ID` also changes its photo.
 
 ## Requirements
 
@@ -94,7 +136,7 @@ host, overwriting the old one.
 
 - **Products** are not stored in the database — they're a static list
   in `assets/js/products.js` (English + Arabic name, description,
-  price, unit, category, and a Bootstrap Icon). To add or edit a
+  price, unit, category, photo path, and a fallback Bootstrap Icon). To add or edit a
   product, edit that file directly.
 - **Orders** are saved to SQLite the moment a customer confirms
   checkout (`api/create_order.php`), and shown in the admin dashboard
