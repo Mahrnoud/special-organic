@@ -18,7 +18,6 @@ $mobileAdditional = isset($body['mobile_additional']) && $body['mobile_additiona
     ? trim((string)$body['mobile_additional'])
     : null;
 $items = $body['items'] ?? [];
-$shippingFee = 50.0; // Fixed per order, enforced independently of the browser.
 
 // --- Server-side validation (never trust the browser alone) ---
 $mobileRegex = '/^01[0125][0-9]{8}$/';
@@ -45,6 +44,20 @@ if (!is_array($items) || count($items) === 0) {
 // Read availability and prices under the same write lock as order creation.
 $pdo = get_db();
 $pdo->exec('BEGIN IMMEDIATE');
+$deliveryCity = shipping_city($city);
+if (!$deliveryCity) {
+    $pdo->exec('ROLLBACK');
+    json_response(['success' => false, 'message' => 'Please select a valid city.'], 422);
+}
+$rate = $pdo->prepare('SELECT fee FROM shipping_rates WHERE city = ?');
+$rate->execute([$deliveryCity['en']]);
+$shippingFee = (float)$rate->fetchColumn();
+// Existing clients may omit the quote; the saved fee always comes from the database.
+if (array_key_exists('shipping_fee', $body) &&
+    (!is_numeric($body['shipping_fee']) || abs((float)$body['shipping_fee'] - $shippingFee) > 0.001)) {
+    $pdo->exec('ROLLBACK');
+    json_response(['success' => false, 'code' => 'shipping_changed', 'message' => 'The shipping fee has changed. Please review the updated total and confirm again.'], 409);
+}
 $lookup = $pdo->prepare('SELECT * FROM products WHERE id = ? AND archived = 0');
 $recomputedTotal = 0.0;
 $cleanItems = [];

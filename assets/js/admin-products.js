@@ -8,9 +8,9 @@ const osProductCategories = [
   ['grains', 'category_grains'], ['bundle', 'category_bundle'],
 ];
 
-for (const section of ['orders', 'products']) {
+for (const section of ['orders', 'products', 'shipping']) {
   document.getElementById(section + 'Tab').addEventListener('click', () => {
-    for (const name of ['orders', 'products']) {
+    for (const name of ['orders', 'products', 'shipping']) {
       const active = name === section;
       document.getElementById(name + 'Panel').hidden = !active;
       const button = document.getElementById(name + 'Tab');

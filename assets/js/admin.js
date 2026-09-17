@@ -347,5 +347,6 @@ fetch('api/check_session.php', { credentials: 'same-origin' })
     populateCityFilter();
     loadOrders();
     loadProducts();
+    loadShipping();
   })
   .catch(() => { window.location.href = 'admin-login.html'; });

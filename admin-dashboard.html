@@ -28,9 +28,10 @@
   </nav>
 
   <main class="container py-4">
-    <nav class="admin-tabs d-flex gap-2 mb-4" aria-label="Dashboard sections">
+    <nav class="admin-tabs d-flex flex-wrap gap-2 mb-4" aria-label="Dashboard sections">
       <button class="btn btn-forest" id="ordersTab" type="button" aria-pressed="true" aria-controls="ordersPanel"><i class="bi bi-receipt me-2"></i><span data-i18n="dashboard_title">Orders</span></button>
       <button class="btn btn-outline-forest" id="productsTab" type="button" aria-pressed="false" aria-controls="productsPanel"><i class="bi bi-box-seam me-2"></i><span data-i18n="manage_products">Products</span></button>
+      <button class="btn btn-outline-forest" id="shippingTab" type="button" aria-pressed="false" aria-controls="shippingPanel"><i class="bi bi-truck me-2"></i><span data-i18n="manage_shipping">Shipping</span></button>
     </nav>
     <div id="adminNotice" class="alert d-none" role="status" aria-live="polite"></div>
     <section id="ordersPanel" aria-labelledby="ordersTab">
@@ -177,6 +178,21 @@
       <div id="productListStatus" role="status" aria-live="polite" class="text-muted-soft mb-3"></div>
       <div class="table-responsive"><table class="table orders-table align-middle admin-products-table"><thead><tr><th data-i18n="product_label">Product</th><th data-i18n="category_label">Category</th><th data-i18n="price_label">Price (EGP)</th><th data-i18n="availability">Availability</th><th data-i18n="actions">Actions</th></tr></thead><tbody id="productsTableBody"></tbody></table></div>
     </section>
+    <section id="shippingPanel" aria-labelledby="shippingTab" hidden>
+      <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+        <div><h1 class="h4" data-i18n="manage_shipping">Shipping</h1><p class="text-muted-soft mb-0" data-i18n="shipping_help">Set the delivery fee for each city. Changes apply to new orders.</p></div>
+        <button type="button" id="refreshShipping" class="btn btn-outline-forest" data-i18n="refresh">Refresh</button>
+      </div>
+      <form id="shippingForm" class="mb-4">
+        <fieldset id="shippingFields" disabled><div class="row g-3 align-items-end">
+          <div class="col-md-5"><label for="shippingCity" class="form-label" data-i18n="city_col">City</label><select id="shippingCity" class="form-select" required></select></div>
+          <div class="col-md-4"><label for="shippingFee" class="form-label" data-i18n="shipping_fee_egp">Shipping fee (EGP)</label><input id="shippingFee" type="number" class="form-control" min="0" max="1000000" step="1" inputmode="decimal" required aria-describedby="shippingFeeHelp"></div>
+          <div class="col-md-3"><button id="saveShippingBtn" type="submit" class="btn btn-forest" data-i18n="save_shipping">Save shipping fee</button></div>
+        </div><div id="shippingFeeHelp" class="form-text" data-i18n="shipping_zero_help">Enter 0 for free shipping.</div></fieldset>
+      </form>
+      <div id="shippingListStatus" role="status" aria-live="polite" class="text-muted-soft mb-3"></div>
+      <div class="table-responsive"><table class="table orders-table align-middle bg-white"><thead><tr><th data-i18n="city_col">City</th><th data-i18n="shipping_fee_egp">Shipping fee (EGP)</th></tr></thead><tbody id="shippingTableBody"></tbody></table></div>
+    </section>
   </main>
 
 
@@ -273,5 +289,6 @@
   <script src="assets/js/egypt-cities.js"></script>
   <script src="assets/js/admin.js"></script>
   <script src="assets/js/admin-products.js"></script>
+  <script src="assets/js/admin-shipping.js"></script>
 </body>
 </html>

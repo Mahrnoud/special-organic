@@ -72,5 +72,8 @@ function get_db(): PDO
     require_once __DIR__ . '/catalog.php';
     initialize_products($pdo);
 
+    require_once __DIR__ . '/shipping.php';
+    initialize_shipping($pdo);
+
     return $pdo;
 }

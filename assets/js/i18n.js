@@ -487,6 +487,32 @@ Object.assign(OS_DICT.ar, {
   "cart_unavailable_removed": "تمت إزالة المنتجات غير المتاحة من السلة. يرجى مراجعة المنتجات المتبقية قبل الطلب."
 });
 
+Object.assign(OS_DICT.en, {
+  "manage_shipping": "Shipping",
+  "shipping_help": "Set the delivery fee for each city. Changes apply to new orders.",
+  "shipping_fee_egp": "Shipping fee (EGP)",
+  "shipping_zero_help": "Enter 0 for free shipping.",
+  "save_shipping": "Save shipping fee",
+  "shipping_saved": "Shipping fee saved.",
+  "shipping_select_city": "Select a city",
+  "shipping_unavailable": "Unavailable",
+  "shipping_load_error": "Unable to load shipping fees. Please refresh the page to try again.",
+  "shipping_changed": "The shipping fee has changed. Please review the updated total and confirm again."
+});
+
+Object.assign(OS_DICT.ar, {
+  "manage_shipping": "الشحن",
+  "shipping_help": "حدد رسوم التوصيل لكل مدينة. تسري التغييرات على الطلبات الجديدة.",
+  "shipping_fee_egp": "رسوم الشحن (جنيه مصري)",
+  "shipping_zero_help": "أدخل 0 للشحن المجاني.",
+  "save_shipping": "حفظ رسوم الشحن",
+  "shipping_saved": "تم حفظ رسوم الشحن.",
+  "shipping_select_city": "اختر المدينة",
+  "shipping_unavailable": "غير متاح",
+  "shipping_load_error": "تعذر تحميل رسوم الشحن. يرجى تحديث الصفحة للمحاولة مجدداً.",
+  "shipping_changed": "تغيرت رسوم الشحن. يرجى مراجعة الإجمالي المحدث وتأكيد الطلب مرة أخرى."
+});
+
 function osLang() {
   return localStorage.getItem('os_lang') || 'en';
 }

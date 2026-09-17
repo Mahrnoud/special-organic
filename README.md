@@ -107,17 +107,24 @@ name to view the details instead. Both actions work with the keyboard.
 
 ## Shipping and delivery details
 
-Every nonempty order has a fixed **50 EGP shipping fee**, added once to the
-items subtotal. Checkout displays subtotal, shipping, and total in both languages.
-Name, city, address, and WhatsApp number are required and marked with a red `*`;
-the additional number remains optional. Address is limited to 500 characters.
+In the admin dashboard, open **Shipping**, select a city, enter its fee in
+EGP, and click **Save shipping fee**. Zero means free shipping; decimal fees
+are supported. All 27 cities initially use the previous 50 EGP fee until edited.
+Rates are stored in SQLite and survive refreshes and server restarts.
 
-The API validates the address and adds the 50 EGP fee itself. Saved orders,
-admin details, and Excel exports include the address and shipping breakdown.
-Existing SQLite databases upgrade automatically on the next API request;
-historical orders retain their totals, with a zero shipping fee and blank address.
-The fixed fee is defined in `assets/js/cart.js` and `api/create_order.php`;
-update both together if the delivery price changes.
+Checkout loads the saved rates and immediately updates shipping and the total
+when the customer selects a city, in English or Arabic. Until a city is selected,
+the total stays pending. If rates cannot be loaded, checkout asks the customer to
+refresh instead of assuming a fee.
+
+The server calculates shipping from the selected city's saved rate. If the fee
+changes while a customer is checking out, they must review the updated total and
+confirm again. Existing orders keep their original shipping fees and totals;
+admin details and Excel exports retain the saved shipping breakdown.
+
+Name, city, address, and WhatsApp number are required; the additional number is
+optional. Address is limited to 500 characters. Existing SQLite databases upgrade
+automatically on the next API request, without replacing historical orders.
 
 ## Requirements
 

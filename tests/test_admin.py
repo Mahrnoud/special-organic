@@ -96,9 +96,57 @@ class AdminIntegrationTests(unittest.TestCase):
 
     def test_admin_required(self):
         for endpoint, body in [('save_product.php', {}), ('archive_product.php', {'id': 1, 'archived': True}),
-                               ('update_order_status.php', {'ids': [1], 'status': 'shipped'}), ('get_products.php?admin=1', None)]:
+                               ('update_order_status.php', {'ids': [1], 'status': 'shipped'}), ('get_products.php?admin=1', None),
+                               ('save_shipping.php', {'city': 'Cairo', 'fee': 10})]:
             self.assertEqual(self.request(endpoint, body, anonymous=True)[0], 401)
         self.assertEqual(self.request('get_products.php', anonymous=True)[0], 200)
+
+    def test_shipping_rates_and_order_totals(self):
+        code, data = self.request('get_shipping.php', anonymous=True)
+        self.assertEqual(code, 200)
+        self.assertEqual(len(data['rates']), 27)
+        self.assertTrue(all(rate['fee'] == 50 for rate in data['rates']))
+        product_id, _ = self.product()
+        try:
+            self.assertEqual(self.request('save_shipping.php', {'city': 'Giza', 'fee': 75.25})[0], 200)
+            self.assertEqual(self.request('save_shipping.php', {'city': 'الإسكندرية', 'fee': 0})[0], 200)
+            # Repeated requests initialize the schema without overwriting saved rates.
+            _, rates = self.request('get_shipping.php', anonymous=True)
+            self.assertEqual(next(r['fee'] for r in rates['rates'] if r['en'] == 'Giza'), 75.25)
+            for city, fee in [('Giza', 75.25), ('الجيزة', 75.25), ('Alexandria', 0), ('الإسكندرية', 0), ('Cairo', 50)]:
+                code, order = self.order(product_id, city=city, shipping_fee=fee, total=1)
+                self.assertEqual(code, 200, order)
+                _, saved = self.request('get_order.php?id=' + str(order['order_id']))
+                self.assertEqual(saved['order']['shipping_fee'], fee)
+                self.assertEqual(saved['order']['total_amount'], 65 + fee)
+            _, old = self.order(product_id, city='Giza', shipping_fee=75.25)
+            self.request('save_shipping.php', {'city': 'Giza', 'fee': 90})
+            _, saved = self.request('get_order.php?id=' + str(old['order_id']))
+            self.assertEqual(saved['order']['shipping_fee'], 75.25)
+            self.assertEqual(saved['order']['total_amount'], 140.25)
+            for quote in [75.25, 0, None, True, 'invalid']:
+                code, error = self.order(product_id, city='Giza', shipping_fee=quote)
+                self.assertEqual(code, 409)
+                self.assertEqual(error['code'], 'shipping_changed')
+            self.assertEqual(self.order(product_id, city='Giza', shipping_fee=90)[0], 200)
+            self.assertEqual(self.order(product_id, city='Unknown city')[0], 422)
+        finally:
+            for city in ['Giza', 'Alexandria']:
+                self.request('save_shipping.php', {'city': city, 'fee': 50})
+
+    def test_shipping_validation(self):
+        for fee in [-1, 1000001, '50', None, True, [], {}]:
+            self.assertEqual(self.request('save_shipping.php', {'city': 'Cairo', 'fee': fee})[0], 422)
+        for city in ['', 'Unknown city', None, [], 1]:
+            self.assertEqual(self.request('save_shipping.php', {'city': city, 'fee': 50})[0], 422)
+        self.assertEqual(self.request('save_shipping.php')[0], 405)
+        self.assertEqual(self.request('get_shipping.php', {})[0], 405)
+
+    def test_shipping_city_list_matches_checkout(self):
+        import re
+        entries = re.findall(r"\{ en: '([^']+)', ar: '([^']+)' \}", (ROOT / 'assets/js/egypt-cities.js').read_text())
+        cities = json.loads((ROOT / 'api/shipping-cities.json').read_text())
+        self.assertEqual(cities, [dict(en=en, ar=ar) for en, ar in entries])
 
     def test_create_edit_archive_restore_and_order_history(self):
         product_id, product = self.product()

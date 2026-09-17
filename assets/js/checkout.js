@@ -3,12 +3,52 @@
 osRequireLang();
 
 const EG_MOBILE_RE = /^01[0125][0-9]{8}$/;
+let osShippingRates = [];
+let osShippingLoaded = false;
+
+function osCartShipping() {
+  if (!osCartLinesWithDetails().length) return 0;
+  const city = document.getElementById('citySelect').value;
+  return osShippingLoaded ? osShippingRates.find((rate) => rate.en === city)?.fee ?? null : null;
+}
+
+function osCartGrandTotal() {
+  const shipping = osCartShipping();
+  return shipping === null ? null : osCartTotal() + shipping;
+}
+
+function renderCartSummary() {
+  const shipping = osCartShipping();
+  document.getElementById('summaryCount').textContent = osCartCount();
+  document.getElementById('summarySubtotal').textContent = osFormatPrice(osCartTotal());
+  document.getElementById('summaryShipping').textContent = shipping === null
+    ? osT(osShippingLoaded ? 'shipping_select_city' : 'shipping_unavailable') : osFormatPrice(shipping);
+  document.getElementById('summaryTotal').textContent = shipping === null ? '—' : osFormatPrice(osCartGrandTotal());
+}
+
+async function loadCheckoutShipping() {
+  osShippingLoaded = false;
+  try {
+    const response = await fetch('api/get_shipping.php', { cache: 'no-store' });
+    const data = await response.json();
+    if (!response.ok || !data.success || !Array.isArray(data.rates) ||
+        !OS_EGYPT_CITIES.every((city) => data.rates.some((rate) => rate.en === city.en && Number.isFinite(rate.fee) && rate.fee >= 0))) {
+      throw new Error('Invalid shipping rates');
+    }
+    osShippingRates = data.rates;
+    osShippingLoaded = true;
+  } catch (_) {
+    showOrderError(osT('shipping_load_error'));
+  }
+  renderCartSummary();
+  return osShippingLoaded;
+}
 
 function renderCityOptions() {
   const select = document.getElementById('citySelect');
   OS_EGYPT_CITIES.forEach((c) => {
     const opt = document.createElement('option');
-    opt.value = osLang() === 'ar' ? c.ar : c.en;
+    opt.value = c.en;
     opt.textContent = osLang() === 'ar' ? c.ar : c.en;
     select.appendChild(opt);
   });
@@ -78,10 +118,7 @@ function renderCart() {
     });
   });
 
-  document.getElementById('summaryCount').textContent = osCartCount();
-  document.getElementById('summarySubtotal').textContent = osFormatPrice(osCartTotal());
-  document.getElementById('summaryShipping').textContent = osFormatPrice(osCartShipping());
-  document.getElementById('summaryTotal').textContent = osFormatPrice(osCartGrandTotal());
+  renderCartSummary();
 }
 
 function setFieldValidity(el, isValid) {
@@ -106,6 +143,7 @@ document.getElementById('checkoutForm').addEventListener('submit', function (e) 
   e.preventDefault();
   hideOrderError();
   if (!osCatalogLoaded) { showOrderError(osT('catalog_error')); return; }
+  if (!osShippingLoaded) { showOrderError(osT('shipping_load_error')); return; }
 
   const fullName = document.getElementById('fullName').value.trim();
   const city = document.getElementById('citySelect').value;
@@ -117,8 +155,9 @@ document.getElementById('checkoutForm').addEventListener('submit', function (e) 
   setFieldValidity(document.getElementById('fullName'), fullName.length > 0);
   if (fullName.length === 0) valid = false;
 
-  setFieldValidity(document.getElementById('citySelect'), city.length > 0);
-  if (city.length === 0) valid = false;
+  const cityOk = osCartShipping() !== null && city.length > 0;
+  setFieldValidity(document.getElementById('citySelect'), cityOk);
+  if (!cityOk) valid = false;
 
   const addressOk = address.length > 0 && address.length <= 500;
   setFieldValidity(document.getElementById('address'), addressOk);
@@ -141,7 +180,7 @@ document.getElementById('checkoutForm').addEventListener('submit', function (e) 
   const payload = {
     language: osLang(),
     full_name: fullName,
-    city: city,
+    city: osLang() === 'ar' ? OS_EGYPT_CITIES.find((entry) => entry.en === city).ar : city,
     country: 'Egypt',
     address: address,
     mobile_whatsapp: mobileWhatsapp,
@@ -166,7 +205,7 @@ document.getElementById('checkoutForm').addEventListener('submit', function (e) 
     body: JSON.stringify(payload),
   })
     .then((res) => res.json())
-    .then((data) => {
+    .then(async (data) => {
       if (data && data.success) {
         document.getElementById('cartContent').classList.add('d-none');
         document.getElementById('cartEmptyState').classList.add('d-none');
@@ -174,7 +213,11 @@ document.getElementById('checkoutForm').addEventListener('submit', function (e) 
         document.getElementById('orderSuccessState').classList.remove('d-none');
         osClearCart();
       } else {
-        showOrderError((data && data.message) || osT('order_error_generic'));
+        if (data?.code === 'shipping_changed') {
+          if (await loadCheckoutShipping()) showOrderError(osT('shipping_changed'));
+        } else {
+          showOrderError((data && data.message) || osT('order_error_generic'));
+        }
         submitBtn.disabled = false;
         submitBtn.innerHTML = `<span data-i18n="place_order">${osT('place_order')}</span>`;
       }
@@ -191,9 +234,10 @@ if (osLang() === 'ar') {
 }
 
 renderCityOptions();
+document.getElementById('citySelect').addEventListener('change', renderCartSummary);
 document.getElementById('placeOrderBtn').disabled = true;
 document.getElementById('cartContent').classList.add('d-none');
-osCatalogReady.then((loaded) => {
+Promise.all([osCatalogReady, loadCheckoutShipping()]).then(([loaded]) => {
   if (!loaded) {
     document.getElementById('cartContent').classList.remove('d-none');
     showOrderError(osT('catalog_error'));
