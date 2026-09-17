@@ -11,7 +11,7 @@ function statusSelectHtml(orderId, status) {
   const options = OS_ORDER_STATUSES.map(
     (s) => `<option value="${s}" ${s === status ? 'selected' : ''}>${osT('status_' + s)}</option>`
   ).join('');
-  return `<select class="form-select form-select-sm status-select status-select-${status}" data-id="${orderId}">${options}</select>`;
+  return `<select class="form-select form-select-sm status-select status-select-${status}" data-id="${orderId}" data-status="${status}" aria-label="${osEscape(osT('status_col'))} #${orderId}">${options}</select>`;
 }
 
 function formatDate(isoString) {
@@ -43,104 +43,160 @@ function currentFilters() {
   };
 }
 
-/* Sends a status change to the server. Reloads the table afterwards so the
-   stat tiles and any other open views stay in sync. */
-function updateOrderStatus(orderId, status, selectEl) {
-  if (selectEl) selectEl.disabled = true;
+const osSelectedOrders = new Set();
+let osOrdersBusy = false;
+let osOrdersRequest = 0;
 
-  fetch('api/update_order_status.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'same-origin',
-    body: JSON.stringify({ id: orderId, status }),
-  })
-    .then((res) => {
-      if (res.status === 401) { window.location.href = 'admin-login.html'; throw new Error('unauthorized'); }
-      return res.json();
-    })
-    .then((data) => {
-      if (!data || !data.success) {
-        alert((data && data.message) || osT('status_update_error'));
-      }
-      loadOrders();
-    })
-    .catch(() => {
-      alert(osT('status_update_error'));
-      loadOrders();
-    });
+function osEscape(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
-function loadOrders() {
+async function osAdminRequest(url, options = {}) {
+  const res = await fetch(url, { credentials: 'same-origin', ...options });
+  if (res.status === 401) { window.location.href = 'admin-login.html'; throw new Error(osT('session_expired')); }
+  const data = await res.json();
+  if (!res.ok || !data.success) throw new Error(data.message || osT('request_error'));
+  return data;
+}
+
+function osAdminNotice(message, error = false) {
+  const box = document.getElementById('adminNotice');
+  box.textContent = message;
+  box.className = 'alert ' + (error ? 'alert-danger' : 'alert-success');
+}
+
+function syncOrderSelection() {
+  const count = osSelectedOrders.size;
+  document.getElementById('selectedOrderCount').textContent = osT('orders_selected').replace('{count}', count);
+  const all = document.getElementById('selectAllOrders');
+  all.checked = osLastOrders.length > 0 && count === osLastOrders.length;
+  all.indeterminate = count > 0 && count < osLastOrders.length;
+  all.disabled = osOrdersBusy || !osLastOrders.length;
+  for (const id of ['bulkOrderStatus', 'applyBulkStatus', 'clearSelection']) {
+    document.getElementById(id).disabled = osOrdersBusy || !count;
+  }
+  document.querySelectorAll('.order-selector').forEach((checkbox) => {
+    checkbox.checked = osSelectedOrders.has(Number(checkbox.dataset.id));
+    checkbox.disabled = osOrdersBusy;
+    checkbox.closest('tr').classList.toggle('order-selected', checkbox.checked);
+  });
+  document.querySelectorAll('#ordersPanel .status-select').forEach((select) => { select.disabled = osOrdersBusy; });
+  document.getElementById('detailsStatusSelect').disabled = osOrdersBusy;
+}
+
+async function updateOrderStatus(orderId, status, selectEl) {
+  if (osOrdersBusy) return;
+  const previous = selectEl?.dataset.status;
+  osOrdersBusy = true;
+  syncOrderSelection();
+  if (selectEl) selectEl.disabled = true;
+  try {
+    await osAdminRequest('api/update_order_status.php', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: orderId, status }),
+    });
+    if (selectEl) {
+      selectEl.dataset.status = status;
+      selectEl.className = `form-select form-select-sm status-select status-select-${status}`;
+    }
+    await loadOrders();
+  } catch (error) {
+    if (selectEl && previous) {
+      selectEl.value = previous;
+      selectEl.className = `form-select form-select-sm status-select status-select-${previous}`;
+    }
+    osAdminNotice(error.message || osT('status_update_error'), true);
+  } finally {
+    osOrdersBusy = false;
+    syncOrderSelection();
+    if (selectEl) selectEl.disabled = false;
+  }
+}
+
+async function loadOrders() {
+  const request = ++osOrdersRequest;
   const loading = document.getElementById('loadingMsg');
   const noOrders = document.getElementById('noOrdersMsg');
   const tbody = document.getElementById('ordersTableBody');
   loading.classList.remove('d-none');
   noOrders.classList.add('d-none');
   tbody.innerHTML = '';
-
-  const f = currentFilters();
+  osLastOrders = [];
+  osSelectedOrders.clear();
+  syncOrderSelection();
   const params = new URLSearchParams();
-  if (f.country) params.set('country', f.country);
-  if (f.city) params.set('city', f.city);
-  if (f.status) params.set('status', f.status);
-  if (f.date_from) params.set('date_from', f.date_from);
-  if (f.date_to) params.set('date_to', f.date_to);
-  if (f.q) params.set('q', f.q);
-
-  fetch('api/get_orders.php?' + params.toString(), { credentials: 'same-origin' })
-    .then((res) => {
-      if (res.status === 401) { window.location.href = 'admin-login.html'; throw new Error('unauthorized'); }
-      return res.json();
-    })
-    .then((data) => {
-      loading.classList.add('d-none');
-      if (!data || !data.success) return;
-
-      osLastOrders = data.orders || [];
-
-      document.getElementById('statTotal').textContent = data.stats.total;
-      document.getElementById('statPending').textContent = data.stats.pending;
-      document.getElementById('statConfirmed').textContent = data.stats.confirmed;
-      document.getElementById('statShipped').textContent = data.stats.shipped;
-      document.getElementById('statDelivered').textContent = data.stats.delivered;
-      document.getElementById('statReturned').textContent = data.stats.returned;
-
-      if (data.orders.length === 0) {
-        noOrders.classList.remove('d-none');
-        return;
-      }
-
-      tbody.innerHTML = data.orders
-        .map(
-          (o) => `
-        <tr data-id="${o.id}">
-          <td>#${o.id}</td>
-          <td>${o.full_name}</td>
-          <td>${o.city}</td>
-          <td>${o.mobile_whatsapp}</td>
-          <td>${osFormatPrice(o.total_amount)}</td>
-          <td>${statusSelectHtml(o.id, o.status)}</td>
-          <td>${formatDate(o.created_at)}</td>
-          <td><button class="btn btn-sm btn-outline-forest view-order-btn" data-id="${o.id}"><span data-i18n="view">${osT('view')}</span></button></td>
-        </tr>`
-        )
-        .join('');
-
-      tbody.querySelectorAll('.status-select').forEach((sel) => {
-        sel.addEventListener('change', () => {
-          updateOrderStatus(Number(sel.getAttribute('data-id')), sel.value, sel);
-        });
+  Object.entries(currentFilters()).forEach(([key, value]) => { if (value) params.set(key, value); });
+  try {
+    const data = await osAdminRequest('api/get_orders.php?' + params);
+    if (request !== osOrdersRequest) return;
+    osLastOrders = data.orders || [];
+    for (const key of ['total', ...OS_ORDER_STATUSES]) {
+      document.getElementById('stat' + key[0].toUpperCase() + key.slice(1)).textContent = data.stats[key];
+    }
+    noOrders.classList.toggle('d-none', osLastOrders.length > 0);
+    tbody.innerHTML = osLastOrders.map((o) => `
+      <tr data-id="${o.id}">
+        <td class="order-checkbox-cell"><input type="checkbox" class="form-check-input order-selector" data-id="${o.id}" aria-label="${osEscape(osT('select_order'))} #${o.id}"></td>
+        <td>#${o.id}</td><td>${osEscape(o.full_name)}</td><td>${osEscape(o.city)}</td>
+        <td>${osEscape(o.mobile_whatsapp)}</td><td>${osFormatPrice(o.total_amount)}</td>
+        <td>${statusSelectHtml(o.id, o.status)}</td><td>${osEscape(formatDate(o.created_at))}</td>
+        <td><button class="btn btn-sm btn-outline-forest view-order-btn" data-id="${o.id}">${osT('view')}</button></td>
+      </tr>`).join('');
+    tbody.querySelectorAll('.order-selector').forEach((checkbox) => {
+      checkbox.addEventListener('change', () => {
+        const id = Number(checkbox.dataset.id);
+        if (checkbox.checked) osSelectedOrders.add(id); else osSelectedOrders.delete(id);
+        syncOrderSelection();
       });
-
-      tbody.querySelectorAll('tr').forEach((row) => {
-        row.addEventListener('click', (e) => {
-          if (e.target.closest('.status-select')) return; // let the dropdown work on its own
-          openOrderDetails(Number(row.getAttribute('data-id')));
-        });
+    });
+    tbody.querySelectorAll('.status-select').forEach((select) => {
+      select.addEventListener('change', () => updateOrderStatus(Number(select.dataset.id), select.value, select));
+    });
+    tbody.querySelectorAll('tr').forEach((row) => {
+      row.addEventListener('click', (event) => {
+        if (event.target.closest('.status-select, .order-checkbox-cell')) return;
+        openOrderDetails(Number(row.dataset.id));
       });
-    })
-    .catch(() => { loading.classList.add('d-none'); });
+    });
+    syncOrderSelection();
+  } catch (error) {
+    if (request === osOrdersRequest) osAdminNotice(error.message || osT('request_error'), true);
+  } finally {
+    if (request === osOrdersRequest) loading.classList.add('d-none');
+  }
 }
+
+const bulkStatus = document.getElementById('bulkOrderStatus');
+bulkStatus.innerHTML = `<option value="">${osT('choose_status')}</option>` + OS_ORDER_STATUSES.map((s) => `<option value="${s}">${osT('status_' + s)}</option>`).join('');
+document.getElementById('selectAllOrders').setAttribute('aria-label', osT('select_all_orders'));
+document.getElementById('selectAllOrders').addEventListener('change', (event) => {
+  osSelectedOrders.clear();
+  if (event.target.checked) osLastOrders.forEach((order) => osSelectedOrders.add(order.id));
+  syncOrderSelection();
+});
+document.getElementById('clearSelection').addEventListener('click', () => { osSelectedOrders.clear(); syncOrderSelection(); });
+document.getElementById('applyBulkStatus').addEventListener('click', async () => {
+  if (osOrdersBusy || !osSelectedOrders.size) return;
+  if (!bulkStatus.value) { bulkStatus.focus(); osAdminNotice(osT('choose_status'), true); return; }
+  const ids = [...osSelectedOrders];
+  const status = bulkStatus.value;
+  osOrdersBusy = true;
+  syncOrderSelection();
+  try {
+    const data = await osAdminRequest('api/update_order_status.php', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids, status }),
+    });
+    osAdminNotice(osT('orders_updated').replace('{count}', data.updated_count));
+    bulkStatus.value = '';
+    await loadOrders();
+  } catch (error) {
+    osAdminNotice(error.message || osT('status_update_error'), true);
+  } finally {
+    osOrdersBusy = false;
+    syncOrderSelection();
+  }
+});
+syncOrderSelection();
 
 function openOrderDetails(orderId) {
   fetch('api/get_order.php?id=' + orderId, { credentials: 'same-origin' })
@@ -167,6 +223,8 @@ function openOrderDetails(orderId) {
         (s) => `<option value="${s}" ${s === o.status ? 'selected' : ''}>${osT('status_' + s)}</option>`
       ).join('');
       statusSelect.className = `form-select form-select-sm status-select status-select-${o.status}`;
+      statusSelect.dataset.status = o.status;
+      statusSelect.disabled = osOrdersBusy;
       statusSelect.onchange = () => {
         statusSelect.className = `form-select form-select-sm status-select status-select-${statusSelect.value}`;
         updateOrderStatus(o.id, statusSelect.value, statusSelect);
@@ -176,14 +234,14 @@ function openOrderDetails(orderId) {
       list.innerHTML = o.items
         .map(
           (it) => `<li class="list-group-item d-flex justify-content-between">
-            <span>${it.name} × ${it.qty}</span>
+            <span>${osEscape(it.name)} × ${osEscape(it.qty)}</span>
             <span class="fw-bold">${osFormatPrice(it.price * it.qty)}</span>
           </li>`
         )
         .join('');
 
-      new bootstrap.Modal(document.getElementById('orderDetailsModal')).show();
-    });
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('orderDetailsModal')).show();
+    }).catch(() => osAdminNotice(osT('request_error'), true));
 }
 
 /* Builds a nicely formatted .xlsx from whatever is currently loaded in the
@@ -218,7 +276,7 @@ function exportOrdersToExcel() {
     o.address || '',
     o.mobile_whatsapp,
     o.mobile_additional || '',
-    (o.items || []).map((it) => `${it.name} × ${it.qty}`).join(', '),
+    (o.items || []).map((it) => `${osEscape(it.name)} × ${osEscape(it.qty)}`).join(', '),
     Number(o.total_amount) - Number(o.shipping_fee || 0),
     Number(o.shipping_fee || 0),
     Number(o.total_amount),
@@ -288,5 +346,6 @@ fetch('api/check_session.php', { credentials: 'same-origin' })
     }
     populateCityFilter();
     loadOrders();
+    loadProducts();
   })
   .catch(() => { window.location.href = 'admin-login.html'; });

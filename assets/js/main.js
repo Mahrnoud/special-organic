@@ -11,7 +11,7 @@ function renderProductGrid() {
 
   // The bundle lives in its own "offer" card further up the page, not in
   // the regular grid.
-  const items = OS_PRODUCTS.filter((p) => p.category !== 'bundle');
+  const items = OS_PRODUCTS.filter((p) => p.id !== OS_BUNDLE_PRODUCT_ID);
 
   grid.innerHTML = items
     .map(
@@ -19,12 +19,12 @@ function renderProductGrid() {
     <div class="col-6 col-md-4 col-lg-3">
       <div class="product-card" data-id="${p.id}">
         <div class="product-media">
-          <span class="product-category-tag">${osCategoryName(p.category)}</span>
+          <span class="product-category-tag">${osImageAttribute(osCategoryName(p.category))}</span>
           ${osProductMediaMarkup(p)}
         </div>
         <div class="product-body">
-          <button type="button" class="product-name product-details-button" aria-haspopup="dialog">${osProductName(p)}</button>
-          <div class="product-unit">${osProductUnit(p)}</div>
+          <button type="button" class="product-name product-details-button" aria-haspopup="dialog">${osImageAttribute(osProductName(p))}</button>
+          <div class="product-unit">${osImageAttribute(osProductUnit(p))}</div>
           <div class="product-card-actions">
             <div class="product-price">${osFormatPrice(p.price)}</div>
             <button type="button" class="btn btn-forest product-quick-add" title="${osImageAttribute(osT('add_to_cart'))}" aria-label="${osImageAttribute(osT('add_to_cart') + ' — ' + osProductName(p))}">
@@ -146,7 +146,7 @@ document.getElementById('addToCartBtn').addEventListener('click', () => {
 /* ---------- Featured product hero (slide 1 of the hero slider) ---------- */
 function renderFeatured() {
   const p = OS_PRODUCTS.find((x) => x.id === OS_FEATURED_PRODUCT_ID);
-  if (!p) return;
+  if (!p) { document.getElementById('featuredSection').hidden = true; return; }
 
   const media = document.getElementById('featuredMedia');
   media.innerHTML = osProductMediaMarkup(p, false);
@@ -175,7 +175,7 @@ function renderFeatured() {
 function renderOffer() {
   const bundle = OS_PRODUCTS.find((x) => x.id === OS_BUNDLE_PRODUCT_ID);
   const items = OS_BUNDLE_ITEM_IDS.map((id) => OS_PRODUCTS.find((x) => x.id === id)).filter(Boolean);
-  if (!bundle || items.length < 2) return;
+  if (!bundle || items.length < 2) { document.getElementById('offerSection').hidden = true; return; }
 
   const regularPrice = items.reduce((sum, p) => sum + p.price, 0);
   const saveAmount = regularPrice - bundle.price;
@@ -184,7 +184,7 @@ function renderOffer() {
     .map(
       (p, i) =>
         (i > 0 ? '<span class="os-offer-plus">+</span>' : '') +
-        `<span class="os-offer-item">${osProductMediaMarkup(p)}${osProductName(p)}</span>`
+        `<span class="os-offer-item">${osProductMediaMarkup(p)}${osImageAttribute(osProductName(p))}</span>`
     )
     .join('');
 
@@ -209,7 +209,7 @@ let osHeroIndex = 0;
 let osHeroTimer = null;
 
 function showHeroSlide(index) {
-  const slides = document.querySelectorAll('#heroSlider .os-hero-slide');
+  const slides = document.querySelectorAll('#heroSlider .os-hero-slide:not([hidden])');
   if (!slides.length) return;
   osHeroIndex = (index + slides.length) % slides.length;
   slides.forEach((slide, i) => slide.classList.toggle('os-hero-slide-active', i === osHeroIndex));
@@ -217,7 +217,7 @@ function showHeroSlide(index) {
 }
 
 function initHeroSlider() {
-  const slides = document.querySelectorAll('#heroSlider .os-hero-slide');
+  const slides = document.querySelectorAll('#heroSlider .os-hero-slide:not([hidden])');
   const dotsWrap = document.getElementById('heroDots');
   if (!slides.length || !dotsWrap) return;
 
@@ -246,7 +246,20 @@ const brandMedia = document.getElementById('brandMedia');
 brandMedia.innerHTML = osImageMarkup('assets/img/hero/slide-2-image.jpg', osT('hero_slide2_title'), 'bi-basket3-fill', false);
 osLoadImages(brandMedia);
 
-renderFeatured();
-renderOffer();
-renderProductGrid();
-initHeroSlider();
+document.getElementById('featuredSection').hidden = true;
+document.getElementById('offerSection').hidden = true;
+document.getElementById('productGrid').textContent = osT('loading');
+osCatalogReady.then((loaded) => {
+  if (loaded) {
+    document.getElementById('featuredSection').hidden = false;
+    document.getElementById('offerSection').hidden = false;
+    renderFeatured();
+    renderOffer();
+    renderProductGrid();
+    if (!OS_PRODUCTS.length) document.getElementById('productGrid').textContent = osT('no_products_available');
+  } else {
+    document.getElementById('productGrid').textContent = osT('catalog_error');
+  }
+  initHeroSlider();
+  showHeroSlide(0);
+});

@@ -42,21 +42,36 @@ if (!is_array($items) || count($items) === 0) {
     json_response(['success' => false, 'message' => 'Your cart is empty.'], 422);
 }
 
-// Recompute the total from the submitted items rather than trusting the client's number.
+// Read availability and prices under the same write lock as order creation.
+$pdo = get_db();
+$pdo->exec('BEGIN IMMEDIATE');
+$lookup = $pdo->prepare('SELECT * FROM products WHERE id = ? AND archived = 0');
 $recomputedTotal = 0.0;
 $cleanItems = [];
+$lang = ($body['language'] ?? 'en') === 'ar' ? 'ar' : 'en';
 foreach ($items as $item) {
-    $qty = (int)($item['qty'] ?? 0);
-    $price = (float)($item['price'] ?? 0);
-    $name = trim((string)($item['name'] ?? ''));
-    if ($qty <= 0 || $price < 0 || $name === '') {
-        json_response(['success' => false, 'message' => 'Invalid item in cart.'], 422);
+    $qty = is_array($item) ? ($item['qty'] ?? null) : null;
+    $id = is_array($item) ? ($item['id'] ?? null) : null;
+    if (!is_int($qty) || $qty < 1 || $qty > 999 || !is_int($id) || $id < 1) {
+        $pdo->exec('ROLLBACK');
+        json_response(['success' => false, 'message' => 'Invalid item or quantity in cart.'], 422);
+    }
+    $lookup->execute([$id]);
+    $product = $lookup->fetch(PDO::FETCH_ASSOC);
+    if (!$product) {
+        $pdo->exec('ROLLBACK');
+        json_response(['success' => false, 'message' => 'A product in your cart is no longer available. Refresh your cart before ordering.'], 409);
+    }
+    $price = (float)$product['price'];
+    // Ask the customer to review changes instead of silently charging a new price.
+    if (!isset($item['price']) || !is_numeric($item['price']) || abs((float)$item['price'] - $price) > 0.001) {
+        $pdo->exec('ROLLBACK');
+        json_response(['success' => false, 'message' => 'A product price has changed. Refresh your cart to review the new total.'], 409);
     }
     $recomputedTotal += $qty * $price;
-    $cleanItems[] = ['id' => $item['id'] ?? null, 'name' => $name, 'qty' => $qty, 'price' => $price];
+    $cleanItems[] = ['id' => $id, 'name' => $product['name_' . $lang], 'qty' => $qty, 'price' => $price];
 }
 
-$pdo = get_db();
 $stmt = $pdo->prepare('
     INSERT INTO orders (full_name, city, country, address, mobile_whatsapp, mobile_additional, items, total_amount, shipping_fee, status)
     VALUES (:full_name, :city, :country, :address, :mobile_whatsapp, :mobile_additional, :items, :total_amount, :shipping_fee, :status)
@@ -74,4 +89,6 @@ $stmt->execute([
     ':status' => 'pending',
 ]);
 
-json_response(['success' => true, 'order_id' => (int)$pdo->lastInsertId()]);
+$orderId = (int)$pdo->lastInsertId();
+$pdo->exec('COMMIT');
+json_response(['success' => true, 'order_id' => $orderId]);

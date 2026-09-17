@@ -19,6 +19,7 @@ function osSaveCart(cart) {
 }
 
 function osAddToCart(productId, qty) {
+  if (!osCatalogLoaded || !OS_PRODUCTS.some((p) => p.id === productId)) return;
   const cart = osGetCart();
   const line = cart.find((l) => l.id === productId);
   if (line) {

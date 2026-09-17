@@ -12,25 +12,34 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $allowedStatuses = ['pending', 'confirmed', 'shipped', 'delivered', 'returned'];
 
 $body = read_json_body();
-$id = (int)($body['id'] ?? 0);
-$status = trim((string)($body['status'] ?? ''));
-
-if ($id <= 0) {
-    json_response(['success' => false, 'message' => 'Invalid order id.'], 422);
+$ids = $body['ids'] ?? [$body['id'] ?? null];
+$status = $body['status'] ?? '';
+if (!is_array($ids) || count($ids) === 0 || count($ids) > 5000) {
+    json_response(['success' => false, 'message' => 'Select between 1 and 5,000 orders.'], 422);
 }
+foreach ($ids as $id) {
+    if (!is_int($id) || $id <= 0) json_response(['success' => false, 'message' => 'Invalid order id.'], 422);
+}
+$ids = array_values(array_unique($ids));
 if (!in_array($status, $allowedStatuses, true)) {
     json_response(['success' => false, 'message' => 'Invalid status.'], 422);
 }
 
 $pdo = get_db();
-
-$check = $pdo->prepare('SELECT id FROM orders WHERE id = :id LIMIT 1');
-$check->execute([':id' => $id]);
-if (!$check->fetch()) {
-    json_response(['success' => false, 'message' => 'Order not found.'], 404);
+$pdo->exec('BEGIN IMMEDIATE');
+try {
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    $check = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE id IN ($placeholders)");
+    $check->execute($ids);
+    if ((int)$check->fetchColumn() !== count($ids)) {
+        $pdo->exec('ROLLBACK');
+        json_response(['success' => false, 'message' => 'One or more orders no longer exist. Refresh and try again.'], 404);
+    }
+    $stmt = $pdo->prepare("UPDATE orders SET status = ? WHERE id IN ($placeholders)");
+    $stmt->execute([$status, ...$ids]);
+    $pdo->exec('COMMIT');
+} catch (Throwable $e) {
+    $pdo->exec('ROLLBACK');
+    throw $e;
 }
-
-$stmt = $pdo->prepare('UPDATE orders SET status = :status WHERE id = :id');
-$stmt->execute([':status' => $status, ':id' => $id]);
-
-json_response(['success' => true, 'order_id' => $id, 'status' => $status]);
+json_response(['success' => true, 'order_ids' => $ids, 'order_id' => $ids[0], 'updated_count' => count($ids), 'status' => $status]);

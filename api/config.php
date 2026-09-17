@@ -11,6 +11,11 @@ declare(strict_types=1);
 ini_set('display_errors', '0'); // never leak PHP errors as HTML into a JSON response
 error_reporting(E_ALL);
 
+set_exception_handler(function (Throwable $error): void {
+    error_log((string)$error);
+    json_response(['success' => false, 'message' => 'Something went wrong. Please try again.'], 500);
+});
+
 session_set_cookie_params([
     'lifetime' => 60 * 60 * 8, // 8 hours
     'path' => '/',

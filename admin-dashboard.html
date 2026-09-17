@@ -18,7 +18,7 @@
     <div class="container d-flex align-items-center justify-content-between">
       <div class="d-flex align-items-center gap-2">
         <img src="assets/img/logo.png" class="os-logo-mark" alt="Organic Special">
-        <span class="brand-name" data-i18n="dashboard_title">Orders</span>
+        <span class="brand-name" data-i18n="admin_title">Admin dashboard</span>
       </div>
       <button type="button" class="btn btn-outline-light btn-sm rounded-pill px-3" id="logoutBtn">
         <i class="bi bi-box-arrow-right me-1"></i>
@@ -28,6 +28,12 @@
   </nav>
 
   <main class="container py-4">
+    <nav class="admin-tabs d-flex gap-2 mb-4" aria-label="Dashboard sections">
+      <button class="btn btn-forest" id="ordersTab" type="button" aria-pressed="true" aria-controls="ordersPanel"><i class="bi bi-receipt me-2"></i><span data-i18n="dashboard_title">Orders</span></button>
+      <button class="btn btn-outline-forest" id="productsTab" type="button" aria-pressed="false" aria-controls="productsPanel"><i class="bi bi-box-seam me-2"></i><span data-i18n="manage_products">Products</span></button>
+    </nav>
+    <div id="adminNotice" class="alert d-none" role="status" aria-live="polite"></div>
+    <section id="ordersPanel" aria-labelledby="ordersTab">
     <!-- Stat tiles -->
     <div class="row g-3 mb-4">
       <div class="col-6 col-md-2">
@@ -120,11 +126,22 @@
       </button>
     </div>
 
+    <div class="bulk-order-bar d-flex flex-wrap align-items-center gap-3 mb-3">
+      <span id="selectedOrderCount" class="fw-bold" aria-live="polite"></span>
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        <label for="bulkOrderStatus" class="small" data-i18n="update_status_to">Update status to</label>
+        <select id="bulkOrderStatus" class="form-select w-auto" disabled></select>
+        <button type="button" id="applyBulkStatus" class="btn btn-forest" disabled data-i18n="update_selected">Update selected</button>
+        <button type="button" id="clearSelection" class="btn btn-outline-forest" disabled data-i18n="clear_selection">Clear selection</button>
+      </div>
+      <small class="text-muted-soft" data-i18n="selection_scope">Select all applies to the current filtered list.</small>
+    </div>
     <!-- Orders table -->
     <div class="table-responsive">
       <table class="table orders-table align-middle bg-white">
         <thead>
           <tr>
+            <th class="order-checkbox-cell"><input type="checkbox" class="form-check-input" id="selectAllOrders" aria-label="Select all displayed orders" disabled></th>
             <th data-i18n="order_id_col">Order #</th>
             <th data-i18n="customer_col">Customer</th>
             <th data-i18n="city_col">City</th>
@@ -146,7 +163,47 @@
     <div id="loadingMsg" class="text-center text-muted-soft py-5">
       <div class="spinner-border text-forest"></div>
     </div>
+    </section>
+    <section id="productsPanel" aria-labelledby="productsTab" hidden>
+      <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+        <div><h1 class="h4" data-i18n="manage_products">Products</h1><p class="text-muted-soft mb-0" data-i18n="products_help">Add and edit your catalog. Archive out-of-stock products and restore them when ready.</p></div>
+        <button type="button" class="btn btn-forest" id="addProductBtn"><i class="bi bi-plus-lg me-2"></i><span data-i18n="add_product">Add product</span></button>
+      </div>
+      <div class="row g-3 mb-4">
+        <div class="col-md-6"><label for="productSearch" class="form-label" data-i18n="search_products">Search products</label><input type="search" class="form-control" id="productSearch"></div>
+        <div class="col-md-4"><label for="productStateFilter" class="form-label" data-i18n="availability">Availability</label><select id="productStateFilter" class="form-select"><option value="active" data-i18n="active_products">Active products</option><option value="archived" data-i18n="archived_products">Archived products</option><option value="all" data-i18n="all_products">All products</option></select></div>
+        <div class="col-md-2 d-flex align-items-end"><button type="button" id="refreshProducts" class="btn btn-outline-forest" data-i18n="refresh">Refresh</button></div>
+      </div>
+      <div id="productListStatus" role="status" aria-live="polite" class="text-muted-soft mb-3"></div>
+      <div class="table-responsive"><table class="table orders-table align-middle admin-products-table"><thead><tr><th data-i18n="product_label">Product</th><th data-i18n="category_label">Category</th><th data-i18n="price_label">Price (EGP)</th><th data-i18n="availability">Availability</th><th data-i18n="actions">Actions</th></tr></thead><tbody id="productsTableBody"></tbody></table></div>
+    </section>
   </main>
+
+
+  <div class="modal fade" id="productEditorModal" tabindex="-1" aria-labelledby="productEditorTitle" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable"><form id="productEditorForm" class="modal-content">
+      <div class="modal-header"><h2 class="modal-title fs-5" id="productEditorTitle"></h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+      <div class="modal-body">
+        <div class="alert alert-danger d-none" id="productEditorError" role="alert"></div>
+        <fieldset id="productEditorFields"><div class="row g-3">
+          <div class="col-md-6"><label class="form-label" for="product_name_en" data-i18n="field_name_en">English name</label><input type="text" class="form-control" id="product_name_en" name="name_en" maxlength="160" dir="ltr" required></div>
+          <div class="col-md-6"><label class="form-label" for="product_name_ar" data-i18n="field_name_ar">Arabic name</label><input type="text" class="form-control" id="product_name_ar" name="name_ar" maxlength="160" dir="rtl" required></div>
+          <div class="col-md-6"><label class="form-label" for="product_unit_en" data-i18n="field_unit_en">English unit / pack size</label><input type="text" class="form-control" id="product_unit_en" name="unit_en" maxlength="120" dir="ltr"></div>
+          <div class="col-md-6"><label class="form-label" for="product_unit_ar" data-i18n="field_unit_ar">Arabic unit / pack size</label><input type="text" class="form-control" id="product_unit_ar" name="unit_ar" maxlength="120" dir="rtl"></div>
+          <div class="col-md-6"><label class="form-label" for="product_desc_en" data-i18n="field_desc_en">English description</label><textarea class="form-control" id="product_desc_en" name="desc_en" maxlength="5000" dir="ltr" rows="3"></textarea></div>
+          <div class="col-md-6"><label class="form-label" for="product_desc_ar" data-i18n="field_desc_ar">Arabic description</label><textarea class="form-control" id="product_desc_ar" name="desc_ar" maxlength="5000" dir="rtl" rows="3"></textarea></div>
+          <div class="col-md-6"><label class="form-label" for="product_ingredients_en" data-i18n="field_ingredients_en">English ingredients</label><textarea class="form-control" id="product_ingredients_en" name="ingredients_en" maxlength="2000" dir="ltr" rows="3"></textarea></div>
+          <div class="col-md-6"><label class="form-label" for="product_ingredients_ar" data-i18n="field_ingredients_ar">Arabic ingredients</label><textarea class="form-control" id="product_ingredients_ar" name="ingredients_ar" maxlength="2000" dir="rtl" rows="3"></textarea></div>
+          <div class="col-md-6"><label for="product_category" class="form-label" data-i18n="category_label">Category</label><select id="product_category" name="category" class="form-select" required></select></div>
+          <div class="col-md-6"><label for="product_price" class="form-label" data-i18n="price_label">Price (EGP)</label><input type="number" min="0" max="1000000" step="0.01" id="product_price" name="price" class="form-control" required></div>
+          <div class="col-12"><label for="product_image" class="form-label" data-i18n="cover_image">Cover image URL or path</label><input type="text" id="product_image" name="image" class="form-control" maxlength="2000" dir="ltr" placeholder="assets/img/products/1.jpg"></div>
+          <div class="col-12"><label for="product_photo" class="form-label" data-i18n="upload_photo">Or upload a cover photo</label><input type="file" id="product_photo" class="form-control" accept="image/jpeg,image/png,image/webp,image/gif"><div class="form-text" data-i18n="photo_help">JPG, PNG, WebP or GIF, up to 5 MB. Uploading replaces the cover image.</div></div>
+          <div class="col-12"><label for="product_images" class="form-label" data-i18n="gallery_images">Gallery image URLs or paths (one per line)</label><textarea id="product_images" class="form-control" rows="3" dir="ltr"></textarea><div class="form-text" data-i18n="gallery_help">Optional, up to 12 images. Leave photos empty to use a product icon.</div></div>
+        </div></fieldset>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline-forest" data-bs-dismiss="modal" data-i18n="cancel">Cancel</button><button type="submit" class="btn btn-forest" id="saveProductBtn" data-i18n="save_product">Save product</button></div>
+    </form></div>
+  </div>
 
   <!-- Order details modal -->
   <div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-hidden="true">
@@ -215,5 +272,6 @@
   <script src="assets/js/i18n.js"></script>
   <script src="assets/js/egypt-cities.js"></script>
   <script src="assets/js/admin.js"></script>
+  <script src="assets/js/admin-products.js"></script>
 </body>
 </html>

@@ -1129,3 +1129,16 @@ body.os-home-loading { overflow: hidden; }
   .os-splash-logo, .os-splash-tagline { animation: none !important; opacity: 1 !important; transform: none !important; }
   .os-hero-dot.active { transition: none !important; }
 }
+
+/* Admin catalog and bulk order actions */
+[hidden] { display: none !important; }
+.bulk-order-bar { background: var(--os-sand); border-radius: 12px; padding: 1rem; }
+.bulk-order-bar .form-select { min-width: 170px; }
+.order-checkbox-cell { width: 44px; text-align: center; }
+.order-checkbox-cell .form-check-input { width: 1.2em; height: 1.2em; cursor: pointer; }
+.orders-table tr.order-selected > td { background: #edf5ec; }
+.admin-products-table { min-width: 690px; }
+.admin-product-photo { width: 56px; height: 56px; flex: 0 0 56px; border-radius: 10px; background: var(--os-sand); display: grid; place-items: center; overflow: hidden; color: var(--os-forest); }
+.admin-product-photo img { width: 100%; height: 100%; object-fit: cover; }
+.admin-product-name { max-width: 320px; overflow-wrap: anywhere; }
+#productEditorFields { min-width: 0; }

@@ -1,7 +1,7 @@
 <?php
 /**
  * Opens (and, on first run, creates) the SQLite database file at
- * /database/store.db, plus its two tables: admins and orders.
+ * /database/store.db and upgrades its tables without replacing existing data.
  *
  * SQLite needs nothing installed beyond PHP's pdo_sqlite extension
  * (enabled by default on almost every PHP install/shared host).
@@ -22,6 +22,7 @@ function get_db(): PDO
     $pdo = new PDO('sqlite:' . $dbPath);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->exec('PRAGMA foreign_keys = ON');
+    $pdo->exec('PRAGMA busy_timeout = 5000');
 
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS admins (
@@ -67,6 +68,9 @@ function get_db(): PDO
             ':hash' => password_hash('Organic@123', PASSWORD_DEFAULT),
         ]);
     }
+
+    require_once __DIR__ . '/catalog.php';
+    initialize_products($pdo);
 
     return $pdo;
 }

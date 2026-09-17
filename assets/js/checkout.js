@@ -37,7 +37,7 @@ function renderCart() {
     <div class="cart-line d-flex align-items-center gap-3" data-id="${l.id}">
       <div class="cart-line-icon">${osProductMediaMarkup(l.product)}</div>
       <div class="flex-grow-1">
-        <div class="fw-bold">${osProductName(l.product)}</div>
+        <div class="fw-bold">${osImageAttribute(osProductName(l.product))}</div>
         <div class="text-muted-soft small">${osFormatPrice(l.product.price)} <span data-i18n="each">each</span></div>
       </div>
       <div class="qty-stepper">
@@ -105,6 +105,7 @@ function hideOrderError() {
 document.getElementById('checkoutForm').addEventListener('submit', function (e) {
   e.preventDefault();
   hideOrderError();
+  if (!osCatalogLoaded) { showOrderError(osT('catalog_error')); return; }
 
   const fullName = document.getElementById('fullName').value.trim();
   const city = document.getElementById('citySelect').value;
@@ -138,6 +139,7 @@ document.getElementById('checkoutForm').addEventListener('submit', function (e) 
 
   const lines = osCartLinesWithDetails();
   const payload = {
+    language: osLang(),
     full_name: fullName,
     city: city,
     country: 'Egypt',
@@ -189,4 +191,24 @@ if (osLang() === 'ar') {
 }
 
 renderCityOptions();
-renderCart();
+document.getElementById('placeOrderBtn').disabled = true;
+document.getElementById('cartContent').classList.add('d-none');
+osCatalogReady.then((loaded) => {
+  if (!loaded) {
+    document.getElementById('cartContent').classList.remove('d-none');
+    showOrderError(osT('catalog_error'));
+    return;
+  }
+  const cart = osGetCart();
+  const available = cart.filter((line) => OS_PRODUCTS.some((p) => p.id === line.id));
+  if (available.length !== cart.length) {
+    osSaveCart(available);
+    const notice = document.createElement('div');
+    notice.className = 'alert alert-warning';
+    notice.setAttribute('role', 'status');
+    notice.textContent = osT('cart_unavailable_removed');
+    document.getElementById('cartEmptyState').before(notice);
+  }
+  document.getElementById('placeOrderBtn').disabled = false;
+  renderCart();
+});
