@@ -1142,3 +1142,12 @@ body.os-home-loading { overflow: hidden; }
 .admin-product-photo img { width: 100%; height: 100%; object-fit: cover; }
 .admin-product-name { max-width: 320px; overflow-wrap: anywhere; }
 #productEditorFields { min-width: 0; }
+
+/* Dashboard content editing */
+.content-editor-section { padding: 1.5rem; margin-bottom: 1.5rem; background: #fff; border: 1px solid var(--os-sand-line); border-radius: 16px; }
+.content-slide { padding: 1.25rem; margin-bottom: 1.25rem; border: 1px solid var(--os-sand-line); border-radius: 12px; }
+.content-image-preview { width: 120px; height: 90px; object-fit: contain; border-radius: 10px; background: var(--os-sand); }
+.content-save-bar { position: sticky; bottom: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; padding: 1rem; background: #fff; border-top: 1px solid var(--os-sand-line); z-index: 10; }
+.content-editor-section input, .content-editor-section textarea { min-width: 0; }
+.os-hero-desc, .os-about-desc, .os-about-card p, .os-contact [data-i18n="contact_desc"] { white-space: pre-line; overflow-wrap: anywhere; }
+@media (max-width: 575.98px) { .content-editor-section, .content-slide { padding: 1rem; } }

@@ -18,10 +18,6 @@ const osCatalogReady = fetch('api/get_products.php', { cache: 'no-store' })
   })
   .catch(() => false);
 
-/* Change this id to feature another product. Its photo, name, price,
-   description, and fallback icon come from the catalog entry above. */
-const OS_FEATURED_PRODUCT_ID = 3;
-
 /* The two products that make up the homepage bundle offer, plus the id of
    the combined product above that actually gets added to the cart. The
    "regular price" shown crossed out is calculated from these automatically,

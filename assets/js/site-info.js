@@ -1,28 +1,15 @@
-/* Organic Special — store contact & social details.
-   Edit the values below and every place that shows a phone number,
-   email or address (the contact section, the trust bar, and the
-   footer) updates automatically. Nothing here needs to match the
-   checkout WhatsApp number — this is just how customers reach you. */
-
-const OS_SITE_INFO = {
-  // Shown as plain text and used for the "tel:" / "mailto:" / WhatsApp links.
-  phoneDisplay: '01000000000',
-  phoneHref: 'tel:+201000000000',
-
-  whatsappDisplay: '01000000000',
-  whatsappHref: 'https://wa.me/201000000000',
-
-  email: 'hello@organicspecial.example',
-
-  address_en: 'Cairo, Egypt',
-  address_ar: 'القاهرة، مصر',
-
-  hours_en: 'Saturday – Thursday, 10:00 AM – 8:00 PM',
-  hours_ar: 'السبت - الخميس، ١٠:٠٠ ص - ٨:٠٠ م',
-
-  social: {
-    facebook: '#',
-    instagram: '#',
-    whatsapp: 'https://wa.me/201000000000',
-  },
-};
+/* Shared public content, loaded once on every storefront page. */
+let OS_SITE_CONTENT = null;
+function osContentText(value) { return value?.[osLang()] || value?.en || ''; }
+const osContentReady = fetch('api/get_content.php', { cache: 'no-store' })
+  .then(async response => {
+    const data = await response.json();
+    if (!response.ok || !data.success) throw new Error('Content unavailable');
+    OS_SITE_CONTENT = data.content;
+    for (const [key, value] of Object.entries(data.content.texts)) {
+      OS_DICT.en[key] = value.en;
+      OS_DICT.ar[key] = value.ar;
+    }
+    osApplyI18n();
+    return true;
+  }).catch(() => false);

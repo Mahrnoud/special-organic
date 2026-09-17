@@ -75,5 +75,8 @@ function get_db(): PDO
     require_once __DIR__ . '/shipping.php';
     initialize_shipping($pdo);
 
+    require_once __DIR__ . '/content.php';
+    initialize_content($pdo);
+
     return $pdo;
 }

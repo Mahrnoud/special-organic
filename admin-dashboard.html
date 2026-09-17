@@ -32,6 +32,7 @@
       <button class="btn btn-forest" id="ordersTab" type="button" aria-pressed="true" aria-controls="ordersPanel"><i class="bi bi-receipt me-2"></i><span data-i18n="dashboard_title">Orders</span></button>
       <button class="btn btn-outline-forest" id="productsTab" type="button" aria-pressed="false" aria-controls="productsPanel"><i class="bi bi-box-seam me-2"></i><span data-i18n="manage_products">Products</span></button>
       <button class="btn btn-outline-forest" id="shippingTab" type="button" aria-pressed="false" aria-controls="shippingPanel"><i class="bi bi-truck me-2"></i><span data-i18n="manage_shipping">Shipping</span></button>
+      <button class="btn btn-outline-forest" id="contentTab" type="button" aria-pressed="false" aria-controls="contentPanel"><i class="bi bi-pencil-square me-2"></i><span data-i18n="manage_content">Site content</span></button>
     </nav>
     <div id="adminNotice" class="alert d-none" role="status" aria-live="polite"></div>
     <section id="ordersPanel" aria-labelledby="ordersTab">
@@ -193,6 +194,18 @@
       <div id="shippingListStatus" role="status" aria-live="polite" class="text-muted-soft mb-3"></div>
       <div class="table-responsive"><table class="table orders-table align-middle bg-white"><thead><tr><th data-i18n="city_col">City</th><th data-i18n="shipping_fee_egp">Shipping fee (EGP)</th></tr></thead><tbody id="shippingTableBody"></tbody></table></div>
     </section>
+    <section id="contentPanel" aria-labelledby="contentTab" hidden>
+      <h1 class="h4" data-i18n="manage_content">Site content</h1>
+      <p class="text-muted-soft" data-i18n="content_help">Edit both languages. Save changes to publish them across the store.</p>
+      <div id="contentStatus" role="status" aria-live="polite"></div>
+      <button type="button" id="retryContent" class="btn btn-outline-forest mb-3" hidden data-i18n="refresh">Refresh</button>
+      <form id="contentForm">
+        <fieldset id="contentFields" disabled>
+          <div id="contentEditor"></div>
+          <div class="content-save-bar"><button type="submit" id="saveContent" class="btn btn-forest" data-i18n="save_content">Save site content</button><span id="contentSaveStatus" role="status" aria-live="polite"></span><a href="home.html" target="_blank" rel="noopener" class="btn btn-outline-forest" data-i18n="view_store">View store</a></div>
+        </fieldset>
+      </form>
+    </section>
   </main>
 
 
@@ -290,5 +303,6 @@
   <script src="assets/js/admin.js"></script>
   <script src="assets/js/admin-products.js"></script>
   <script src="assets/js/admin-shipping.js"></script>
+  <script src="assets/js/admin-content.js"></script>
 </body>
 </html>

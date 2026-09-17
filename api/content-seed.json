@@ -1,0 +1,132 @@
+{
+  "slides": [
+    {
+      "image": "assets/img/products/3.jpg",
+      "tag": {
+        "en": "Staff pick",
+        "ar": "اختيار المتجر"
+      },
+      "title": {
+        "en": "Black Seeds (Nigella)",
+        "ar": "حبة البركة"
+      },
+      "description": {
+        "en": "Known as \"the seed of blessing\", used across the region for generations. A pinch goes well in bread dough, tea, or honey.",
+        "ar": "تُعرف بحبة البركة، ومُستخدمة منذ أجيال في المنطقة. رشة منها تُضاف إلى عجين الخبز أو الشاي أو العسل."
+      },
+      "button": {
+        "en": "Add to cart",
+        "ar": "أضف إلى السلة"
+      },
+      "href": "#productsSection",
+      "product_id": 3
+    },
+    {
+      "image": "assets/img/hero/slide-2-image.jpg",
+      "tag": {
+        "en": "Pure & natural",
+        "ar": "طبيعي ١٠٠٪"
+      },
+      "title": {
+        "en": "Fresh From Nature To Your Door",
+        "ar": "من الطبيعة إلى باب بيتك"
+      },
+      "description": {
+        "en": "Seeds, tea and grains sourced with care, packed the same week they're ordered, and delivered anywhere in Egypt.",
+        "ar": "بذور وشاي وحبوب نختارها بعناية، تُعبأ في نفس أسبوع الطلب، وتصل إلى أي مكان في مصر."
+      },
+      "button": {
+        "en": "Shop now",
+        "ar": "تسوق الآن"
+      },
+      "href": "#productsSection",
+      "product_id": 0
+    }
+  ],
+  "texts": {
+    "about_badge": {
+      "en": "Who we are",
+      "ar": "من نحن"
+    },
+    "about_title": {
+      "en": "A small shop, grown from a simple idea",
+      "ar": "متجر صغير، بدأ من فكرة بسيطة"
+    },
+    "about_desc": {
+      "en": "Special Organic started as a search for cleaner ingredients for our own kitchen. Today we pack and ship seeds, tea and grains straight from Cairo, with nothing added and nothing hidden about where it comes from.",
+      "ar": "بدأت أورجانيك سبيشال كبحث عن مكونات أنظف لمطبخنا الخاص. اليوم نُعبئ ونشحن البذور والشاي والحبوب مباشرة من القاهرة، بدون أي إضافات وبدون إخفاء مصدرها."
+    },
+    "about_point1_title": {
+      "en": "Organic sourcing",
+      "ar": "مصادر عضوية"
+    },
+    "about_point1_desc": {
+      "en": "Every product is chosen for what it doesn't contain as much as what it does.",
+      "ar": "نختار كل منتج بناءً على ما لا يحتويه بقدر ما يحتويه."
+    },
+    "about_point2_title": {
+      "en": "Fresh on every order",
+      "ar": "طازج مع كل طلب"
+    },
+    "about_point2_desc": {
+      "en": "We pack in small batches so nothing sits on a shelf for long.",
+      "ar": "نُعبئ بكميات صغيرة حتى لا يبقى شيء على الرف لفترة طويلة."
+    },
+    "about_point3_title": {
+      "en": "Local & responsive",
+      "ar": "محلي وسريع الاستجابة"
+    },
+    "about_point3_desc": {
+      "en": "Based in Cairo, reachable on WhatsApp for any question about your order.",
+      "ar": "مقرّنا في القاهرة، ومتاحون على واتساب لأي استفسار عن طلبك."
+    },
+    "contact_title": {
+      "en": "Get in touch",
+      "ar": "تواصل معنا"
+    },
+    "contact_desc": {
+      "en": "Questions about a product or an order? Reach us any of these ways, or send your order details straight to WhatsApp.",
+      "ar": "عندك سؤال عن منتج أو طلب؟ تواصل معنا بأي من هذه الطرق، أو أرسل تفاصيل طلبك مباشرة على واتساب."
+    },
+    "contact_whatsapp_btn": {
+      "en": "Message us on WhatsApp",
+      "ar": "راسلنا على واتساب"
+    },
+    "footer_about_desc": {
+      "en": "Organic seeds, tea and grains, packed fresh and delivered across Egypt. No middlemen, no filler ingredients.",
+      "ar": "بذور وشاي وحبوب عضوية، تُعبأ طازجة وتُشحن لكل أنحاء مصر. بدون وسطاء وبدون مكونات حشو."
+    },
+    "discover_badge": {
+      "en": "Discover",
+      "ar": "اكتشف"
+    },
+    "discover_title": {
+      "en": "Discover Real Organic Flavors",
+      "ar": "اكتشف نكهات عضوية حقيقية"
+    },
+    "discover_desc": {
+      "en": "No additives, no shortcuts — just honest ingredients for your kitchen.",
+      "ar": "بدون إضافات وبدون اختصارات — مكونات صادقة لمطبخك."
+    },
+    "learn_more": {
+      "en": "Learn more",
+      "ar": "اعرف أكثر"
+    }
+  },
+  "contact": {
+    "phone": "01000000000",
+    "whatsapp": "https://wa.me/201000000000",
+    "email": "hello@organicspecial.example",
+    "facebook": "",
+    "instagram": "",
+    "address": {
+      "en": "Cairo, Egypt",
+      "ar": "القاهرة، مصر"
+    },
+    "hours": {
+      "en": "Saturday – Thursday, 10:00 AM – 8:00 PM",
+      "ar": "السبت - الخميس، ١٠:٠٠ ص - ٨:٠٠ م"
+    },
+    "image": "assets/img/logo.png"
+  }
+}

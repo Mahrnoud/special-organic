@@ -101,6 +101,67 @@ class AdminIntegrationTests(unittest.TestCase):
             self.assertEqual(self.request(endpoint, body, anonymous=True)[0], 401)
         self.assertEqual(self.request('get_products.php', anonymous=True)[0], 200)
 
+    def test_content_persistence_validation_and_conflict(self):
+        import copy
+        code, original = self.request('get_content.php', anonymous=True)
+        self.assertEqual(code, 200)
+        self.assertEqual(len(original['content']['slides']), 2)
+        content = copy.deepcopy(original['content'])
+        content['slides'][1]['title'] = {'en': 'Updated <b>title</b>', 'ar': 'عنوان جديد'}
+        content['texts']['about_title'] = {'en': 'Our new story', 'ar': 'قصتنا الجديدة'}
+        content['contact'].update(email='store@example.com', facebook='https://facebook.com/example', whatsapp='https://wa.me/201234567890')
+        payload = {'content': content, 'revision': original['revision']}
+        self.assertEqual(self.request('save_content.php', payload, anonymous=True)[0], 401)
+        code, saved = self.request('save_content.php', payload)
+        self.assertEqual(code, 200, saved)
+        self.assertEqual(saved['content'], content)
+        self.assertEqual(self.request('get_content.php', anonymous=True)[1]['content'], content)
+        self.assertEqual(self.request('save_content.php', payload)[0], 409)
+        self.assertEqual(self.request('save_content.php')[0], 405)
+        self.assertEqual(self.request('get_content.php', {})[0], 405)
+        for path, value in [
+            (('contact', 'facebook'), 'javascript:alert(1)'),
+            (('contact', 'instagram'), '//example.com'),
+            (('contact', 'whatsapp'), 'https://example.com/\\evil'),
+            (('contact', 'email'), 'invalid'),
+            (('contact', 'image'), 'assets/img/../../secret.png'),
+            (('slides', 0, 'href'), 'data:text/html,bad'),
+            (('slides', 0, 'href'), '#[bad'),
+            (('slides', 0, 'product_id'), True),
+            (('slides', 0, 'product_id'), 999999),
+            (('slides', 0, 'title', 'ar'), ''),
+            (('slides',), []), (('slides',), content['slides'] * 6),
+            (('texts', 'about_title', 'en'), ['wrong type']),
+        ]:
+            bad = copy.deepcopy(content)
+            target = bad
+            for key in path[:-1]:
+                target = target[key]
+            target[path[-1]] = value
+            code, error = self.request('save_content.php', {'content': bad, 'revision': saved['revision']})
+            self.assertEqual(code, 422, (path, value, error))
+        current = self.request('get_content.php')[1]
+        self.assertEqual(current['content'], content)
+        self.assertEqual(current['revision'], saved['revision'])
+        self.assertEqual(self.request('save_content.php', {'content': original['content'], 'revision': saved['revision']})[0], 200)
+
+    def test_content_image_upload(self):
+        self.assertEqual(self.request('upload_content_image.php', {}, anonymous=True)[0], 401)
+        self.assertEqual(self.request('upload_content_image.php', {})[0], 422)
+        image = base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=')
+        for contents, expected in [(image, 200), (b'<?php echo "bad"; ?>', 422)]:
+            boundary = 'ContentImageTest'
+            body = (f'--{boundary}\r\nContent-Disposition: form-data; name="photo"; filename="image.png"\r\nContent-Type: image/png\r\n\r\n').encode() + contents + f'\r\n--{boundary}--\r\n'.encode()
+            req = urllib.request.Request(self.url + '/api/upload_content_image.php', data=body, headers={'Content-Type': 'multipart/form-data; boundary=' + boundary})
+            try:
+                with self.client.open(req) as response:
+                    self.assertEqual(response.status, expected)
+                    path = json.load(response)['image']
+                    self.assertTrue(path.startswith('assets/img/uploads/'))
+                    self.assertTrue((self.root / path).is_file())
+            except urllib.error.HTTPError as error:
+                self.assertEqual(error.code, expected)
+
     def test_shipping_rates_and_order_totals(self):
         code, data = self.request('get_shipping.php', anonymous=True)
         self.assertEqual(code, 200)

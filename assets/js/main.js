@@ -143,34 +143,6 @@ document.getElementById('addToCartBtn').addEventListener('click', () => {
   new bootstrap.Toast(document.getElementById('cartToast')).show();
 });
 
-/* ---------- Featured product hero (slide 1 of the hero slider) ---------- */
-function renderFeatured() {
-  const p = OS_PRODUCTS.find((x) => x.id === OS_FEATURED_PRODUCT_ID);
-  if (!p) { document.getElementById('featuredSection').hidden = true; return; }
-
-  const media = document.getElementById('featuredMedia');
-  media.innerHTML = osProductMediaMarkup(p, false);
-  osLoadImages(media);
-  document.getElementById('featuredName').textContent = osProductName(p);
-  document.getElementById('featuredDesc').textContent = osProductDesc(p);
-  document.getElementById('featuredPrice').textContent = osFormatPrice(p.price);
-
-  document.getElementById('featuredSection').addEventListener('click', (e) => {
-    if (e.target.closest('#featuredAddBtn')) return;
-    openProductModal(p.id);
-  });
-  document.getElementById('featuredSection').addEventListener('keydown', (e) => {
-    if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
-      e.preventDefault();
-      openProductModal(p.id);
-    }
-  });
-  document.getElementById('featuredAddBtn').addEventListener('click', () => {
-    osAddToCart(p.id, 1);
-    new bootstrap.Toast(document.getElementById('cartToast')).show();
-  });
-}
-
 /* ---------- Bundle offer (bottom-right ticket next to the slider) ---------- */
 function renderOffer() {
   const bundle = OS_PRODUCTS.find((x) => x.id === OS_BUNDLE_PRODUCT_ID);
@@ -239,27 +211,70 @@ function initHeroSlider() {
 
 function restartHeroAutoplay() {
   if (osHeroTimer) clearInterval(osHeroTimer);
+  if (document.querySelectorAll('#heroSlider .os-hero-slide').length < 2 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   osHeroTimer = setInterval(() => showHeroSlide(osHeroIndex + 1), 7000);
 }
 
-const brandMedia = document.getElementById('brandMedia');
-brandMedia.innerHTML = osImageMarkup('assets/img/hero/slide-2-image.jpg', osT('hero_slide2_title'), 'bi-basket3-fill', false);
-osLoadImages(brandMedia);
-
-document.getElementById('featuredSection').hidden = true;
 document.getElementById('offerSection').hidden = true;
 document.getElementById('productGrid').textContent = osT('loading');
-osCatalogReady.then((loaded) => {
+Promise.all([osCatalogReady, osContentReady]).then(([loaded]) => {
   if (loaded) {
-    document.getElementById('featuredSection').hidden = false;
     document.getElementById('offerSection').hidden = false;
-    renderFeatured();
     renderOffer();
     renderProductGrid();
     if (!OS_PRODUCTS.length) document.getElementById('productGrid').textContent = osT('no_products_available');
   } else {
     document.getElementById('productGrid').textContent = osT('catalog_error');
   }
+  renderContentSlider();
   initHeroSlider();
   showHeroSlide(0);
 });
+
+function renderContentSlider() {
+  const slider = document.getElementById('heroSlider');
+  const controls = slider.querySelector('.os-hero-controls');
+  const slides = OS_SITE_CONTENT?.slides || [{ image: 'assets/img/hero/slide-2-image.jpg',
+    tag: { en: osT('hero_slide2_badge') }, title: { en: osT('hero_slide2_title') },
+    description: { en: osT('hero_slide2_desc') }, button: { en: osT('shop_now') }, href: '#productsSection', product_id: 0 }];
+  slides.forEach((slide, index) => {
+    const product = slide.product_id ? OS_PRODUCTS.find(p => p.id === slide.product_id) : null;
+    if (slide.product_id && !product) return;
+    const element = document.createElement('div');
+    element.className = 'os-hero os-hero-slide os-hero-slide-static';
+    // CSS custom-property URLs resolve where they are used (in style.css).
+    // Resolve from the page first so this also works in a hosted subdirectory.
+    const backgroundUrl = new URL(`assets/img/hero/slide-${index % 2 + 1}-bg.jpg`, document.baseURI);
+    element.style.setProperty('--os-slide-background', `url("${backgroundUrl.href}")`);
+    const esc = osImageAttribute;
+    element.innerHTML = `<div class="os-hero-content">
+      <span class="os-hero-badge">${esc(osContentText(slide.tag))}</span>
+      <h2 class="os-hero-name">${esc(osContentText(slide.title))}</h2>
+      <p class="os-hero-desc">${esc(osContentText(slide.description))}</p>
+      <div class="os-hero-footer">${product ? `<span class="os-hero-price">${osFormatPrice(product.price)}</span><button type="button" class="btn btn-forest rounded-pill px-4">${esc(osContentText(slide.button))}</button>` : `<a class="btn btn-forest rounded-pill px-4" href="${esc(slide.href)}">${esc(osContentText(slide.button))}</a>`}</div>
+    </div><div class="os-hero-media">${osImageMarkup(slide.image, osContentText(slide.title), 'bi-basket3-fill', false)}</div>`;
+    if (product) {
+      element.classList.remove('os-hero-slide-static');
+      element.setAttribute('role', 'button');
+      element.tabIndex = 0;
+      element.setAttribute('aria-label', osContentText(slide.title));
+      element.addEventListener('click', event => {
+        if (!event.target.closest('button')) openProductModal(product.id);
+      });
+      element.addEventListener('keydown', event => {
+        if (event.target === element && ['Enter', ' '].includes(event.key)) {
+          event.preventDefault(); openProductModal(product.id);
+        }
+      });
+    }
+    if (product) element.querySelector('button').addEventListener('click', () => {
+      osAddToCart(product.id, 1);
+      bootstrap.Toast.getOrCreateInstance(document.getElementById('cartToast')).show();
+    });
+    slider.insertBefore(element, controls);
+  });
+  const count = slider.querySelectorAll('.os-hero-slide').length;
+  controls.hidden = count < 2;
+  slider.hidden = count === 0;
+  osLoadImages(slider);
+}

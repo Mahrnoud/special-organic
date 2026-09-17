@@ -58,7 +58,7 @@ icons; missing slide backgrounds leave the original white background.
 | `assets/img/hero/slide-2-bg.jpg` | Second slide background |
 | `assets/img/hero/slide-2-image.jpg` | Second slide's small photo inside the organic shape |
 
-Product photos are shared by cards, popups, the featured slide, bundle
+Product photos are shared by cards, popups, bundle
 offer, and cart. The bundle shows the tea and chia photos side by side;
 it does not need a separate image file.
 
@@ -75,7 +75,7 @@ in `assets/js/products.js`, the second slide's image path next to
 in `assets/css/style.css`. CSS URLs are relative to the CSS folder
 (`../img/hero/...`); JavaScript paths are relative to the page
 (`assets/img/...`). Set a product's `image` to an empty string to use
-only its icon. Changing `OS_FEATURED_PRODUCT_ID` also changes its photo.
+only its icon. Homepage slide photos and product actions are now managed separately in **Admin dashboard → Site content**.
 
 ## Optional ingredients and product galleries
 
@@ -230,3 +230,17 @@ host, overwriting the old one.
 The city dropdown lists Egypt's 27 governorates
 (`assets/js/egypt-cities.js`). Country is fixed to Egypt and cannot be
 changed by the customer, per the current requirements.
+
+
+## Managing site content
+
+Open **Admin dashboard → Site content** to edit the storefront in English and Arabic:
+
+- **Homepage slider:** add up to 10 slides, reorder or remove them (keep at least one), upload a small image or enter its URL/path, and edit the tag, title, description, and button text. A button can open a web URL / store section or add a selected product to the cart. Product slides use live catalog prices and are hidden when that product is archived.
+- **About:** edit the heading, introduction, tag, and all three feature cards.
+- **Contact & shared social links:** edit the heading, description, WhatsApp button text, contact image, phone, email, Facebook, Instagram, WhatsApp URL, address, and business hours. Shared details appear in the existing header, contact, trust bar, and footer locations on both the home and cart pages. Blank optional links are hidden.
+- **Discover card & footer:** edit the Discover card copy and the footer description.
+
+Click **Save site content**, then refresh the storefront to see the changes. Image uploads accept JPG, PNG, WebP, and GIF up to 5 MB, subject to PHP's upload limit. Uploading an image updates the draft; click Save to publish it. Both English and Arabic slide titles/button labels are required. The editor warns before leaving with unsaved changes and refuses to overwrite a newer save from another window.
+
+Content is stored in the existing SQLite database in `site_content`. The table is created automatically without replacing existing products, orders, or shipping rates. `api/content-seed.json` supplies the initial copy only; edit published content through the dashboard. Back up `database/store.db` and `assets/img/uploads/` together. The public `GET api/get_content.php` endpoint supplies content; saving and image uploads require an admin session.

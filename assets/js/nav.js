@@ -40,7 +40,7 @@ if (osNavBurger && osMobileNav) {
 document.querySelectorAll('a[href^="#"]').forEach((link) => {
   link.addEventListener('click', (e) => {
     const targetId = link.getAttribute('href');
-    const target = targetId.length > 1 ? document.querySelector(targetId) : null;
+    const target = targetId?.startsWith('#') && targetId.length > 1 ? document.getElementById(targetId.slice(1)) : null;
     if (!target) return; // not an in-page anchor on this page — let it behave normally
     e.preventDefault();
     osSetMobileNav(false);
@@ -63,25 +63,31 @@ document.querySelectorAll('[data-lang]').forEach((el) => {
 
 /* ---------- Fill in contact details from site-info.js ---------- */
 function osApplySiteInfo() {
-  if (typeof OS_SITE_INFO === 'undefined') return;
-  const lang = osLang();
-
-  document.querySelectorAll('[data-site="phone"]').forEach((el) => { el.textContent = OS_SITE_INFO.phoneDisplay; });
-  document.querySelectorAll('[data-site="phone-href"]').forEach((el) => { el.href = OS_SITE_INFO.phoneHref; });
-  document.querySelectorAll('[data-site="whatsapp-href"]').forEach((el) => { el.href = OS_SITE_INFO.whatsappHref; });
-  document.querySelectorAll('[data-site="email"]').forEach((el) => { el.textContent = OS_SITE_INFO.email; });
-  document.querySelectorAll('[data-site="email-href"]').forEach((el) => { el.href = 'mailto:' + OS_SITE_INFO.email; });
-  document.querySelectorAll('[data-site="address"]').forEach((el) => {
-    el.textContent = lang === 'ar' ? OS_SITE_INFO.address_ar : OS_SITE_INFO.address_en;
+  if (!OS_SITE_CONTENT) return;
+  const info = OS_SITE_CONTENT.contact;
+  const values = { phone: info.phone, email: info.email, address: osContentText(info.address), hours: osContentText(info.hours) };
+  const links = { 'phone-href': info.phone ? 'tel:' + info.phone.replace(/[^+0-9]/g, '') : '',
+    'email-href': info.email ? 'mailto:' + info.email : '',
+    'whatsapp-href': info.whatsapp, whatsapp: info.whatsapp, facebook: info.facebook, instagram: info.instagram };
+  document.querySelectorAll('[data-site]').forEach(el => {
+    const key = el.dataset.site;
+    if (Object.hasOwn(values, key)) el.textContent = values[key];
+    if (Object.hasOwn(links, key)) {
+      if (links[key]) el.href = links[key]; else el.removeAttribute('href');
+      el.hidden = !links[key];
+    }
   });
-  document.querySelectorAll('[data-site="hours"]').forEach((el) => {
-    el.textContent = lang === 'ar' ? OS_SITE_INFO.hours_ar : OS_SITE_INFO.hours_en;
+  document.querySelectorAll('.os-contact-list li').forEach(li => {
+    const value = li.querySelector('[data-site]');
+    li.hidden = value?.hidden || !value?.textContent.trim();
   });
-  document.querySelectorAll('[data-site="facebook"]').forEach((el) => { el.href = OS_SITE_INFO.social.facebook; });
-  document.querySelectorAll('[data-site="instagram"]').forEach((el) => { el.href = OS_SITE_INFO.social.instagram; });
-  document.querySelectorAll('[data-site="whatsapp"]').forEach((el) => { el.href = OS_SITE_INFO.social.whatsapp; });
+  const image = document.querySelector('.os-contact-logo');
+  if (image) {
+    image.closest('.os-contact-logo-wrap').hidden = !info.image;
+    if (info.image) image.src = info.image;
+  }
 }
-osApplySiteInfo();
+osContentReady.then(osApplySiteInfo);
 
 /* ---------- Footer year ---------- */
 document.querySelectorAll('[data-current-year]').forEach((el) => {
