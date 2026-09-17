@@ -158,6 +158,9 @@ function openOrderDetails(orderId) {
       document.getElementById('detailsMobile').textContent = o.mobile_whatsapp;
       document.getElementById('detailsMobileAlt').textContent = o.mobile_additional || '—';
       document.getElementById('detailsTotal').textContent = osFormatPrice(o.total_amount);
+      document.getElementById('detailsAddress').textContent = o.address || '—';
+      document.getElementById('detailsSubtotal').textContent = osFormatPrice(Number(o.total_amount) - Number(o.shipping_fee || 0));
+      document.getElementById('detailsShipping').textContent = osFormatPrice(o.shipping_fee || 0);
 
       const statusSelect = document.getElementById('detailsStatusSelect');
       statusSelect.innerHTML = OS_ORDER_STATUSES.map(
@@ -196,9 +199,12 @@ function exportOrdersToExcel() {
     osT('customer_col'),
     osT('city_col'),
     osT('filter_country'),
+    osT('address'),
     osT('mobile_whatsapp'),
     osT('mobile_additional'),
     osT('items_ordered'),
+    `${osT('subtotal')} (${osT('currency')})`,
+    `${osT('shipping_fee')} (${osT('currency')})`,
     `${osT('total_col')} (${osT('currency')})`,
     osT('status_col'),
     osT('date_col'),
@@ -209,9 +215,12 @@ function exportOrdersToExcel() {
     o.full_name,
     o.city,
     o.country,
+    o.address || '',
     o.mobile_whatsapp,
     o.mobile_additional || '',
     (o.items || []).map((it) => `${it.name} × ${it.qty}`).join(', '),
+    Number(o.total_amount) - Number(o.shipping_fee || 0),
+    Number(o.shipping_fee || 0),
     Number(o.total_amount),
     osT('status_' + o.status),
     formatDate(o.created_at),
@@ -224,9 +233,12 @@ function exportOrdersToExcel() {
     { wch: 22 }, // Customer
     { wch: 14 }, // City
     { wch: 10 }, // Country
+    { wch: 45 }, // Address
     { wch: 16 }, // Mobile
     { wch: 16 }, // Additional mobile
     { wch: 45 }, // Items
+    { wch: 13 }, // Subtotal
+    { wch: 13 }, // Shipping fee
     { wch: 13 }, // Total
     { wch: 12 }, // Status
     { wch: 18 }, // Date

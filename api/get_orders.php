@@ -52,7 +52,7 @@ $whereSql = count($where) > 0 ? ('WHERE ' . implode(' AND ', $where)) : '';
 // Includes mobile_additional + items so the admin dashboard can build a
 // full Excel export without an extra request per order.
 $stmt = $pdo->prepare("
-    SELECT id, full_name, city, country, mobile_whatsapp, mobile_additional, items, total_amount, status, created_at
+    SELECT id, full_name, city, country, address, mobile_whatsapp, mobile_additional, items, total_amount, shipping_fee, status, created_at
     FROM orders
     $whereSql
     ORDER BY created_at DESC, id DESC

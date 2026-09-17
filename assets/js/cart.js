@@ -3,6 +3,7 @@
    order is sent to the backend. */
 
 const OS_CART_KEY = 'os_cart';
+const OS_SHIPPING_FEE = 50;
 
 function osGetCart() {
   try {
@@ -65,6 +66,14 @@ function osCartCount() {
 
 function osCartTotal() {
   return osCartLinesWithDetails().reduce((sum, l) => sum + l.lineTotal, 0);
+}
+
+function osCartShipping() {
+  return osCartLinesWithDetails().length ? OS_SHIPPING_FEE : 0;
+}
+
+function osCartGrandTotal() {
+  return osCartTotal() + osCartShipping();
 }
 
 function osUpdateCartBadge() {

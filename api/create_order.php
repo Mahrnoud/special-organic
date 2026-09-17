@@ -11,13 +11,14 @@ $body = read_json_body();
 
 $fullName = trim((string)($body['full_name'] ?? ''));
 $city = trim((string)($body['city'] ?? ''));
+$address = trim((string)($body['address'] ?? ''));
 $country = trim((string)($body['country'] ?? 'Egypt')) ?: 'Egypt';
 $mobileWhatsapp = trim((string)($body['mobile_whatsapp'] ?? ''));
 $mobileAdditional = isset($body['mobile_additional']) && $body['mobile_additional'] !== null
     ? trim((string)$body['mobile_additional'])
     : null;
 $items = $body['items'] ?? [];
-$total = $body['total'] ?? null;
+$shippingFee = 50.0; // Fixed per order, enforced independently of the browser.
 
 // --- Server-side validation (never trust the browser alone) ---
 $mobileRegex = '/^01[0125][0-9]{8}$/';
@@ -27,6 +28,9 @@ if ($fullName === '' || mb_strlen($fullName) > 120) {
 }
 if ($city === '') {
     json_response(['success' => false, 'message' => 'Please select a city.'], 422);
+}
+if ($address === '' || mb_strlen($address) > 500) {
+    json_response(['success' => false, 'message' => 'Please enter a delivery address (up to 500 characters).'], 422);
 }
 if (!preg_match($mobileRegex, $mobileWhatsapp)) {
     json_response(['success' => false, 'message' => 'Please enter a valid Egyptian WhatsApp number.'], 422);
@@ -54,17 +58,19 @@ foreach ($items as $item) {
 
 $pdo = get_db();
 $stmt = $pdo->prepare('
-    INSERT INTO orders (full_name, city, country, mobile_whatsapp, mobile_additional, items, total_amount, status)
-    VALUES (:full_name, :city, :country, :mobile_whatsapp, :mobile_additional, :items, :total_amount, :status)
+    INSERT INTO orders (full_name, city, country, address, mobile_whatsapp, mobile_additional, items, total_amount, shipping_fee, status)
+    VALUES (:full_name, :city, :country, :address, :mobile_whatsapp, :mobile_additional, :items, :total_amount, :shipping_fee, :status)
 ');
 $stmt->execute([
     ':full_name' => $fullName,
     ':city' => $city,
+    ':address' => $address,
     ':country' => $country,
     ':mobile_whatsapp' => $mobileWhatsapp,
     ':mobile_additional' => ($mobileAdditional !== '' ? $mobileAdditional : null),
     ':items' => json_encode($cleanItems, JSON_UNESCAPED_UNICODE),
-    ':total_amount' => $recomputedTotal,
+    ':total_amount' => $recomputedTotal + $shippingFee,
+    ':shipping_fee' => $shippingFee,
     ':status' => 'pending',
 ]);
 

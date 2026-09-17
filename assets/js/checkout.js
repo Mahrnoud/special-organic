@@ -79,11 +79,17 @@ function renderCart() {
   });
 
   document.getElementById('summaryCount').textContent = osCartCount();
-  document.getElementById('summaryTotal').textContent = osFormatPrice(osCartTotal());
+  document.getElementById('summarySubtotal').textContent = osFormatPrice(osCartTotal());
+  document.getElementById('summaryShipping').textContent = osFormatPrice(osCartShipping());
+  document.getElementById('summaryTotal').textContent = osFormatPrice(osCartGrandTotal());
 }
 
 function setFieldValidity(el, isValid) {
   el.classList.toggle('is-invalid', !isValid);
+  el.setAttribute('aria-invalid', String(!isValid));
+  if (el.id === 'mobileWhatsapp') {
+    document.getElementById('mobileWhatsappError').classList.toggle('d-block', !isValid);
+  }
 }
 
 function showOrderError(message) {
@@ -102,6 +108,7 @@ document.getElementById('checkoutForm').addEventListener('submit', function (e) 
 
   const fullName = document.getElementById('fullName').value.trim();
   const city = document.getElementById('citySelect').value;
+  const address = document.getElementById('address').value.trim();
   const mobileWhatsapp = document.getElementById('mobileWhatsapp').value.trim();
   const mobileAdditional = document.getElementById('mobileAdditional').value.trim();
 
@@ -112,6 +119,10 @@ document.getElementById('checkoutForm').addEventListener('submit', function (e) 
   setFieldValidity(document.getElementById('citySelect'), city.length > 0);
   if (city.length === 0) valid = false;
 
+  const addressOk = address.length > 0 && address.length <= 500;
+  setFieldValidity(document.getElementById('address'), addressOk);
+  if (!addressOk) valid = false;
+
   const whatsappOk = EG_MOBILE_RE.test(mobileWhatsapp);
   setFieldValidity(document.getElementById('mobileWhatsapp'), whatsappOk);
   if (!whatsappOk) valid = false;
@@ -120,13 +131,17 @@ document.getElementById('checkoutForm').addEventListener('submit', function (e) 
   setFieldValidity(document.getElementById('mobileAdditional'), additionalOk);
   if (!additionalOk) valid = false;
 
-  if (!valid) return;
+  if (!valid) {
+    this.querySelector('.is-invalid')?.focus();
+    return;
+  }
 
   const lines = osCartLinesWithDetails();
   const payload = {
     full_name: fullName,
     city: city,
     country: 'Egypt',
+    address: address,
     mobile_whatsapp: mobileWhatsapp,
     mobile_additional: mobileAdditional || null,
     items: lines.map((l) => ({
@@ -135,7 +150,8 @@ document.getElementById('checkoutForm').addEventListener('submit', function (e) 
       qty: l.qty,
       price: l.product.price,
     })),
-    total: osCartTotal(),
+    shipping_fee: osCartShipping(),
+    total: osCartGrandTotal(),
   };
 
   const submitBtn = document.getElementById('placeOrderBtn');

@@ -77,6 +77,48 @@ in `assets/css/style.css`. CSS URLs are relative to the CSS folder
 (`assets/img/...`). Set a product's `image` to an empty string to use
 only its icon. Changing `OS_FEATURED_PRODUCT_ID` also changes its photo.
 
+## Optional ingredients and product galleries
+
+Edit the relevant entry in `assets/js/products.js`. Add `ingredients_en`
+and `ingredients_ar` to show an Ingredients section under the description.
+Leave both out (or empty) to hide the section for that product.
+
+```js
+ingredients_en: 'Green tea leaves.',
+ingredients_ar: 'أوراق الشاي الأخضر.',
+image: 'assets/img/products/7.jpg',
+images: ['assets/img/products/7-detail.jpg', 'assets/img/products/7-pack.jpg'],
+```
+
+Copy the actual extra photos to these paths before adding them. The existing
+`image` is the cover, followed by `images` in order; duplicate paths are ignored.
+With two or more photos, the detail popup shows arrows, dots, keyboard navigation,
+and swipe controls. With one photo it keeps the original static cover. Cards and
+cart thumbnails keep the cover (or the first `images` entry if `image` is omitted).
+Green Tea uses the existing homepage tea/seeds photo as a second slide for
+previewing the gallery; replace its `images` entry with another tea photo when ready.
+The bundle uses its existing tea/chia photos to demonstrate the slider; its card
+and cart thumbnail still show the pair side by side. Green Tea and the bundle
+have ingredient text based on their existing catalog descriptions.
+
+Each product card has an Add to cart button that adds one unit and shows the
+confirmation toast without opening the details popup. Click the photo or product
+name to view the details instead. Both actions work with the keyboard.
+
+## Shipping and delivery details
+
+Every nonempty order has a fixed **50 EGP shipping fee**, added once to the
+items subtotal. Checkout displays subtotal, shipping, and total in both languages.
+Name, city, address, and WhatsApp number are required and marked with a red `*`;
+the additional number remains optional. Address is limited to 500 characters.
+
+The API validates the address and adds the 50 EGP fee itself. Saved orders,
+admin details, and Excel exports include the address and shipping breakdown.
+Existing SQLite databases upgrade automatically on the next API request;
+historical orders retain their totals, with a zero shipping fee and blank address.
+The fixed fee is defined in `assets/js/cart.js` and `api/create_order.php`;
+update both together if the delivery price changes.
+
 ## Requirements
 
 - PHP 7.4 or later, with the `pdo_sqlite` extension enabled (this ships

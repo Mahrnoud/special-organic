@@ -95,43 +95,58 @@
     <div id="cartContent" class="d-none">
       <div id="cartLines" class="d-flex flex-column gap-2 mb-4"></div>
 
-      <div class="cart-summary d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <div class="text-muted-soft small" data-i18n="items_count">Items</div>
-          <div class="fw-bold" id="summaryCount">0</div>
+      <div class="cart-summary mb-4" aria-live="polite" aria-atomic="true">
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted-soft" data-i18n="items_count">Items</span>
+          <span class="fw-bold" id="summaryCount">0</span>
         </div>
-        <div class="text-end">
-          <div class="text-muted-soft small" data-i18n="subtotal">Subtotal</div>
-          <div class="fw-bold fs-5 text-forest" id="summaryTotal">0</div>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted-soft" data-i18n="subtotal">Subtotal</span>
+          <span id="summarySubtotal">0</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted-soft" data-i18n="shipping_fee">Shipping fee</span>
+          <span id="summaryShipping">50 EGP</span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center border-top pt-3 mt-3">
+          <span class="fw-bold" data-i18n="order_total">Total</span>
+          <span class="fw-bold fs-5 text-forest" id="summaryTotal">0</span>
         </div>
       </div>
 
       <hr class="divider-sand">
 
       <h5 class="mb-3" data-i18n="checkout_title">Delivery details</h5>
+      <p class="text-muted-soft small" data-i18n="required_fields_hint">Fields marked with * are required.</p>
       <form id="checkoutForm" novalidate>
         <div class="mb-3">
-          <label class="form-label" data-i18n="full_name">Full name</label>
-          <input type="text" class="form-control" id="fullName" required data-i18n-placeholder="full_name_placeholder" placeholder="e.g. Ahmed Mohamed">
+          <label class="form-label" for="fullName"><span data-i18n="full_name">Full name</span> <span class="text-danger" aria-hidden="true">*</span></label>
+          <input type="text" class="form-control" id="fullName" autocomplete="name" maxlength="120" required data-i18n-placeholder="full_name_placeholder" placeholder="e.g. Ahmed Mohamed">
           <div class="invalid-feedback" data-i18n="field_required">This field is required.</div>
         </div>
 
         <div class="row">
           <div class="col-md-6 mb-3">
-            <label class="form-label" data-i18n="city">City</label>
+            <label class="form-label" for="citySelect"><span data-i18n="city">City</span> <span class="text-danger" aria-hidden="true">*</span></label>
             <select class="form-select" id="citySelect" required>
               <option value="" data-i18n="select_city">Select your city</option>
             </select>
             <div class="invalid-feedback" data-i18n="field_required">This field is required.</div>
           </div>
           <div class="col-md-6 mb-3">
-            <label class="form-label" data-i18n="country">Country</label>
+            <label class="form-label" for="countryField" data-i18n="country">Country</label>
             <input type="text" class="form-control" id="countryField" value="Egypt" disabled>
           </div>
         </div>
 
+        <div class="mb-3">
+          <label class="form-label" for="address"><span data-i18n="address">Address</span> <span class="text-danger" aria-hidden="true">*</span></label>
+          <input type="text" class="form-control" id="address" name="address" autocomplete="street-address" maxlength="500" required data-i18n-placeholder="address_placeholder" placeholder="Street, building, floor and apartment">
+          <div class="invalid-feedback" data-i18n="field_required">This field is required.</div>
+        </div>
+
         <div class="mb-1">
-          <label class="form-label" data-i18n="mobile_whatsapp">Mobile number (WhatsApp)</label>
+          <label class="form-label" for="mobileWhatsapp"><span data-i18n="mobile_whatsapp">Mobile number (WhatsApp)</span> <span class="text-danger" aria-hidden="true">*</span></label>
           <div class="input-group">
             <span class="input-group-text"><i class="bi bi-whatsapp text-success"></i></span>
             <input type="tel" class="form-control" id="mobileWhatsapp" required placeholder="01xxxxxxxxx">
@@ -143,7 +158,7 @@
         </p>
 
         <div class="mb-4">
-          <label class="form-label">
+          <label class="form-label" for="mobileAdditional">
             <span data-i18n="mobile_additional">Additional number</span>
             <span class="text-muted-soft" data-i18n="mobile_additional_sub">(optional)</span>
           </label>

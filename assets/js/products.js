@@ -1,5 +1,7 @@
 /* Organic Special — static product catalog.
-   Prices are in EGP. Local photos are optional; icons remain as fallbacks. */
+   Prices are in EGP. Local photos are optional; icons remain as fallbacks.
+   Optional details: ingredients_en / ingredients_ar (text), and images
+   (extra photo paths, shown after image in the product detail slider). */
 
 const OS_CATEGORIES = [
   { id: 'seeds', en: 'Seeds', ar: 'بذور' },
@@ -77,6 +79,10 @@ const OS_PRODUCTS = [
   {
     id: 7,
     image: 'assets/img/products/7.jpg',
+    // Existing tea/seeds photo used as a second image to try the slider.
+    images: ['assets/img/hero/slide-2-image.jpg'],
+    ingredients_en: 'Green tea leaves.',
+    ingredients_ar: 'أوراق الشاي الأخضر.',
     category: 'tea',
     icon: 'bi-cup-hot-fill',
     name_en: 'Green Tea', name_ar: 'الشاي الأخضر',
@@ -101,6 +107,9 @@ const OS_PRODUCTS = [
     // entry (category 'bundle') so the existing cart/checkout code needs no
     // changes — it's just excluded from the regular grid in main.js.
     id: 101,
+    images: ['assets/img/products/7.jpg', 'assets/img/products/1.jpg'],
+    ingredients_en: 'Green tea leaves and chia seeds (separately packed).',
+    ingredients_ar: 'أوراق الشاي الأخضر وبذور الشيا (معبأة بشكل منفصل).',
     category: 'bundle',
     icon: 'bi-gift-fill',
     name_en: 'Green Tea + Chia Seeds Bundle', name_ar: 'حزمة الشاي الأخضر وبذور الشيا',
@@ -132,6 +141,15 @@ function osProductName(p) { return osLang() === 'ar' ? p.name_ar : p.name_en; }
 function osProductUnit(p) { return osLang() === 'ar' ? p.unit_ar : p.unit_en; }
 function osProductDesc(p) { return osLang() === 'ar' ? p.desc_ar : p.desc_en; }
 
+function osProductIngredients(p) {
+  return (osLang() === 'ar' ? p.ingredients_ar || p.ingredients_en : p.ingredients_en || p.ingredients_ar) || '';
+}
+
+function osProductImages(p) {
+  return [...new Set([p.image, ...(Array.isArray(p.images) ? p.images : [])]
+    .filter((src) => typeof src === 'string' && src.trim()))];
+}
+
 /* Shared image markup. Bind handlers before assigning src so even cached
    failures keep the icon visible, without showing a broken-image symbol. */
 function osImageAttribute(value) {
@@ -155,7 +173,7 @@ function osProductMediaMarkup(product, lazy = true) {
       .map((p) => osImageMarkup(p.image, osProductName(p), p.icon, lazy))
       .join('')}</span>`;
   }
-  return osImageMarkup(product.image, osProductName(product), product.icon, lazy);
+  return osImageMarkup(osProductImages(product)[0], osProductName(product), product.icon, lazy);
 }
 
 function osLoadImages(root) {

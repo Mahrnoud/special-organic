@@ -17,15 +17,20 @@ function renderProductGrid() {
     .map(
       (p) => `
     <div class="col-6 col-md-4 col-lg-3">
-      <div class="product-card" data-id="${p.id}" tabindex="0" role="button" aria-label="${osProductName(p)}">
+      <div class="product-card" data-id="${p.id}">
         <div class="product-media">
           <span class="product-category-tag">${osCategoryName(p.category)}</span>
           ${osProductMediaMarkup(p)}
         </div>
         <div class="product-body">
-          <div class="product-name">${osProductName(p)}</div>
+          <button type="button" class="product-name product-details-button" aria-haspopup="dialog">${osProductName(p)}</button>
           <div class="product-unit">${osProductUnit(p)}</div>
-          <div class="product-price">${osFormatPrice(p.price)}</div>
+          <div class="product-card-actions">
+            <div class="product-price">${osFormatPrice(p.price)}</div>
+            <button type="button" class="btn btn-forest product-quick-add" title="${osImageAttribute(osT('add_to_cart'))}" aria-label="${osImageAttribute(osT('add_to_cart') + ' — ' + osProductName(p))}">
+              <i class="bi bi-cart-plus" aria-hidden="true"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>`
@@ -34,15 +39,66 @@ function renderProductGrid() {
 
   osLoadImages(grid);
   grid.querySelectorAll('.product-card').forEach((card) => {
-    const open = () => openProductModal(Number(card.getAttribute('data-id')));
-    card.addEventListener('click', open);
-    card.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+    const id = Number(card.getAttribute('data-id'));
+    card.querySelector('.product-details-button').addEventListener('click', () => openProductModal(id));
+    card.querySelector('.product-quick-add').addEventListener('click', () => {
+      osAddToCart(id, 1);
+      bootstrap.Toast.getOrCreateInstance(document.getElementById('cartToast')).show();
     });
   });
 }
 
 /* ---------- Shared product detail modal (products + the bundle) ---------- */
+function renderProductGallery(product) {
+  const media = document.getElementById('modalMedia');
+  const images = osProductImages(product);
+  media.onkeydown = null;
+  media.onpointerdown = null;
+  media.onpointerup = null;
+  if (images.length < 2) {
+    media.innerHTML = osProductMediaMarkup(product, false);
+    osLoadImages(media);
+    return;
+  }
+
+  media.innerHTML = `<div class="product-gallery" role="region" aria-label="${osImageAttribute(osT('product_photos'))}" tabindex="0">
+    ${images.map((src, i) => `<div class="product-gallery-slide" ${i ? 'hidden' : ''}>${osImageMarkup(src, `${osProductName(product)} — ${i + 1}`, product.icon, false)}</div>`).join('')}
+    <button type="button" class="product-gallery-arrow product-gallery-prev" aria-label="${osImageAttribute(osT('previous_photo'))}"><span aria-hidden="true">‹</span></button>
+    <button type="button" class="product-gallery-arrow product-gallery-next" aria-label="${osImageAttribute(osT('next_photo'))}"><span aria-hidden="true">›</span></button>
+    <div class="product-gallery-dots">${images.map((_, i) => `<button type="button" aria-label="${osImageAttribute(osT('photo'))} ${i + 1}" aria-pressed="${i === 0}"></button>`).join('')}</div>
+    <span class="visually-hidden product-gallery-status" aria-live="polite" aria-atomic="true"></span>
+  </div>`;
+  const slides = media.querySelectorAll('.product-gallery-slide');
+  const dots = media.querySelectorAll('.product-gallery-dots button');
+  let index = 0;
+  const show = (next) => {
+    index = (next + images.length) % images.length;
+    slides.forEach((slide, i) => { slide.hidden = i !== index; });
+    dots.forEach((dot, i) => dot.setAttribute('aria-pressed', String(i === index)));
+    media.querySelector('.product-gallery-status').textContent = `${osT('photo')} ${index + 1} / ${images.length}`;
+  };
+  const rtl = osLang() === 'ar';
+  media.querySelector('.product-gallery-prev').onclick = () => show(index - 1);
+  media.querySelector('.product-gallery-next').onclick = () => show(index + 1);
+  dots.forEach((dot, i) => { dot.onclick = () => show(i); });
+  media.onkeydown = (e) => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+    show(index + ((e.key === 'ArrowRight') !== rtl ? 1 : -1));
+  };
+  let start = null;
+  media.onpointerdown = (e) => { start = { x: e.clientX, y: e.clientY }; };
+  media.onpointerup = (e) => {
+    if (!start) return;
+    const dx = e.clientX - start.x;
+    const dy = e.clientY - start.y;
+    start = null;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) show(index + ((dx < 0) !== rtl ? 1 : -1));
+  };
+  show(0);
+  osLoadImages(media);
+}
+
 function openProductModal(productId) {
   osSelectedProduct = OS_PRODUCTS.find((p) => p.id === productId);
   if (!osSelectedProduct) return;
@@ -50,19 +106,20 @@ function openProductModal(productId) {
 
   const isBundle = osSelectedProduct.category === 'bundle';
 
-  const media = document.getElementById('modalMedia');
-  media.innerHTML = osProductMediaMarkup(osSelectedProduct, false);
-  osLoadImages(media);
+  renderProductGallery(osSelectedProduct);
   document.getElementById('modalCategory').textContent = isBundle
     ? osT('bundle_offer')
     : osCategoryName(osSelectedProduct.category);
   document.getElementById('modalName').textContent = osProductName(osSelectedProduct);
   document.getElementById('modalUnit').textContent = osProductUnit(osSelectedProduct);
   document.getElementById('modalDesc').textContent = osProductDesc(osSelectedProduct);
+  const ingredients = osProductIngredients(osSelectedProduct).trim();
+  document.getElementById('modalIngredients').textContent = ingredients;
+  document.getElementById('modalIngredientsSection').hidden = !ingredients;
   document.getElementById('modalPrice').textContent = osFormatPrice(osSelectedProduct.price);
   document.getElementById('qtyInput').value = osModalQty;
 
-  new bootstrap.Modal(document.getElementById('productModal')).show();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('productModal')).show();
 }
 
 document.getElementById('qtyMinus').addEventListener('click', () => {

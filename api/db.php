@@ -38,14 +38,25 @@ function get_db(): PDO
             full_name          TEXT NOT NULL,
             city               TEXT NOT NULL,
             country            TEXT NOT NULL DEFAULT 'Egypt',
+            address            TEXT NOT NULL DEFAULT '',
             mobile_whatsapp    TEXT NOT NULL,
             mobile_additional  TEXT,
             items              TEXT NOT NULL,
             total_amount       REAL NOT NULL,
+            shipping_fee       REAL NOT NULL DEFAULT 0,
             status             TEXT NOT NULL DEFAULT 'pending',
             created_at         TEXT DEFAULT CURRENT_TIMESTAMP
         )
     ");
+
+    // Upgrade existing stores without changing historical orders or totals.
+    $orderColumns = array_column($pdo->query('PRAGMA table_info(orders)')->fetchAll(PDO::FETCH_ASSOC), 'name');
+    if (!in_array('address', $orderColumns, true)) {
+        $pdo->exec("ALTER TABLE orders ADD COLUMN address TEXT NOT NULL DEFAULT ''");
+    }
+    if (!in_array('shipping_fee', $orderColumns, true)) {
+        $pdo->exec('ALTER TABLE orders ADD COLUMN shipping_fee REAL NOT NULL DEFAULT 0');
+    }
 
     if ($isNew) {
         // Seed one default admin so the dashboard is reachable on first run.
