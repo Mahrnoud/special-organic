@@ -74,7 +74,8 @@ docker compose --env-file /home/special_organic/runtime.env -f deploy/compose.ya
 curl -fsS http://127.0.0.1:8088/index.html >/dev/null
 curl -fsS https://special-organic.com/api/get_products.php >/dev/null
 nginx -t
-certbot renew --cert-name special-organic.com --dry-run --run-deploy-hooks
+certbot renew --cert-name special-organic.com --dry-run
+RENEWED_LINEAGE=/etc/letsencrypt/live/special-organic.com /usr/local/libexec/special-organic-renew-certificate
 ```
 
 Test checkout and uploads on a disposable instance with separate storage; do not
