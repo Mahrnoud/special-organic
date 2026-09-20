@@ -1,0 +1,32 @@
+name: special_organic
+services:
+  web:
+    image: special-organic:${RELEASE:?Set RELEASE to the deployed Git commit}
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: runtime
+      args:
+        PHP_BASE: ${PHP_BASE:?Set a pinned official PHP image digest}
+        APP_UID: ${APP_UID:?Set the special_organic UID}
+        APP_GID: ${APP_GID:?Set the special_organic GID}
+    ports:
+      - "127.0.0.1:8088:8080"
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 128
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    volumes:
+      - /home/special_organic/shared/database:/var/www/html/database
+      - /home/special_organic/shared/uploads:/var/www/html/assets/img/uploads
+      - /home/special_organic/shared/sessions:/var/lib/php/sessions
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

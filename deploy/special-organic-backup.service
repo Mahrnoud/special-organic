@@ -1,0 +1,15 @@
+[Unit]
+Description=Special Organic database and upload backup
+[Service]
+Type=oneshot
+User=special_organic
+Group=special_organic
+ExecStart=/usr/bin/python3 /usr/local/libexec/special-organic-backup.py
+UMask=0077
+Nice=10
+IOSchedulingClass=idle
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/special_organic/backups
