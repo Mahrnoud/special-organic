@@ -61,7 +61,7 @@ if (array_key_exists('shipping_fee', $body) &&
 $lookup = $pdo->prepare('SELECT * FROM products WHERE id = ? AND archived = 0');
 $recomputedTotal = 0.0;
 $cleanItems = [];
-$lang = ($body['language'] ?? 'en') === 'ar' ? 'ar' : 'en';
+$lang = ($body['language'] ?? 'ar') === 'ar' ? 'ar' : 'en';
 foreach ($items as $item) {
     $qty = is_array($item) ? ($item['qty'] ?? null) : null;
     $id = is_array($item) ? ($item['id'] ?? null) : null;
@@ -75,14 +75,27 @@ foreach ($items as $item) {
         $pdo->exec('ROLLBACK');
         json_response(['success' => false, 'message' => 'A product in your cart is no longer available. Refresh your cart before ordering.'], 409);
     }
-    $price = (float)$product['price'];
+    $sizeId = $item['size_id'] ?? null;
+    $variants = product_variants($pdo, $id);
+    // Older clients can only be resolved when the product has exactly one size.
+    if ($sizeId === null && count($variants) === 1) $sizeId = $variants[0]['size_id'];
+    $variant = null;
+    foreach ($variants as $candidate) {
+        if (is_int($sizeId) && $candidate['size_id'] === $sizeId) $variant = $candidate;
+    }
+    if (!$variant) {
+        $pdo->exec('ROLLBACK');
+        json_response(['success' => false, 'message' => 'The selected size is unavailable. Refresh your cart and select a size again.'], 409);
+    }
+    $price = $variant['price'];
     // Ask the customer to review changes instead of silently charging a new price.
     if (!isset($item['price']) || !is_numeric($item['price']) || abs((float)$item['price'] - $price) > 0.001) {
         $pdo->exec('ROLLBACK');
         json_response(['success' => false, 'message' => 'A product price has changed. Refresh your cart to review the new total.'], 409);
     }
     $recomputedTotal += $qty * $price;
-    $cleanItems[] = ['id' => $id, 'name' => $product['name_' . $lang], 'qty' => $qty, 'price' => $price];
+    $cleanItems[] = ['id' => $id, 'name' => $product['name_' . $lang], 'qty' => $qty, 'price' => $price,
+        'size_id' => $sizeId, 'size_en' => $variant['label_en'], 'size_ar' => $variant['label_ar']];
 }
 
 $stmt = $pdo->prepare('

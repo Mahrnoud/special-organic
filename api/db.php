@@ -50,6 +50,13 @@ function get_db(): PDO
         )
     ");
 
+    // Start order numbers at 999, without rewinding an existing sequence.
+    $pdo->exec("INSERT INTO sqlite_sequence (name, seq)
+        SELECT 'orders', 998 WHERE NOT EXISTS (
+            SELECT 1 FROM sqlite_sequence WHERE name = 'orders'
+        )");
+    $pdo->exec("UPDATE sqlite_sequence SET seq = 998 WHERE name = 'orders' AND seq < 998");
+
     // Upgrade existing stores without changing historical orders or totals.
     $orderColumns = array_column($pdo->query('PRAGMA table_info(orders)')->fetchAll(PDO::FETCH_ASSOC), 'name');
     if (!in_array('address', $orderColumns, true)) {
@@ -71,6 +78,9 @@ function get_db(): PDO
 
     require_once __DIR__ . '/catalog.php';
     initialize_products($pdo);
+
+    require_once __DIR__ . '/sizes.php';
+    initialize_store_updates($pdo);
 
     require_once __DIR__ . '/shipping.php';
     initialize_shipping($pdo);

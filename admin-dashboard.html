@@ -31,11 +31,13 @@
     <nav class="admin-tabs d-flex flex-wrap gap-2 mb-4" aria-label="Dashboard sections">
       <button class="btn btn-forest" id="ordersTab" type="button" aria-pressed="true" aria-controls="ordersPanel"><i class="bi bi-receipt me-2"></i><span data-i18n="dashboard_title">Orders</span></button>
       <button class="btn btn-outline-forest" id="productsTab" type="button" aria-pressed="false" aria-controls="productsPanel"><i class="bi bi-box-seam me-2"></i><span data-i18n="manage_products">Products</span></button>
+      <button class="btn btn-outline-forest" id="sizesTab" type="button" aria-pressed="false" aria-controls="sizesPanel"><i class="bi bi-rulers me-2"></i><span data-i18n="manage_sizes">Sizes</span></button>
       <button class="btn btn-outline-forest" id="shippingTab" type="button" aria-pressed="false" aria-controls="shippingPanel"><i class="bi bi-truck me-2"></i><span data-i18n="manage_shipping">Shipping</span></button>
       <button class="btn btn-outline-forest" id="contentTab" type="button" aria-pressed="false" aria-controls="contentPanel"><i class="bi bi-pencil-square me-2"></i><span data-i18n="manage_content">Site content</span></button>
     </nav>
     <div id="adminNotice" class="alert d-none" role="status" aria-live="polite"></div>
     <section id="ordersPanel" aria-labelledby="ordersTab">
+    <div class="mb-3"><label for="orderView" class="visually-hidden" data-i18n="dashboard_title">Orders</label><select id="orderView" class="form-select w-auto"><option value="0" data-i18n="active_orders">Active orders</option><option value="1" data-i18n="deleted_orders">Deleted orders</option></select></div>
     <!-- Stat tiles -->
     <div class="row g-3 mb-4">
       <div class="col-6 col-md-2">
@@ -58,14 +60,14 @@
       </div>
       <div class="col-6 col-md-2">
         <div class="stat-tile">
-          <div class="stat-value" id="statShipped">0</div>
-          <div class="stat-label" data-i18n="shipped_orders">Shipped</div>
+          <div class="stat-value" id="statDelivered">0</div>
+          <div class="stat-label" data-i18n="delivered_orders">Delivered</div>
         </div>
       </div>
       <div class="col-6 col-md-2">
         <div class="stat-tile">
-          <div class="stat-value" id="statDelivered">0</div>
-          <div class="stat-label" data-i18n="delivered_orders">Delivered</div>
+          <div class="stat-value" id="statCompleted">0</div>
+          <div class="stat-label" data-i18n="completed_orders">Completed</div>
         </div>
       </div>
       <div class="col-6 col-md-2">
@@ -97,8 +99,8 @@
           <option value="" data-i18n="all_statuses">All statuses</option>
           <option value="pending" data-i18n="status_pending">Pending</option>
           <option value="confirmed" data-i18n="status_confirmed">Confirmed</option>
-          <option value="shipped" data-i18n="status_shipped">Shipped</option>
           <option value="delivered" data-i18n="status_delivered">Delivered</option>
+          <option value="completed" data-i18n="status_completed">Completed</option>
           <option value="returned" data-i18n="status_returned">Returned</option>
         </select>
       </div>
@@ -179,6 +181,18 @@
       <div id="productListStatus" role="status" aria-live="polite" class="text-muted-soft mb-3"></div>
       <div class="table-responsive"><table class="table orders-table align-middle admin-products-table"><thead><tr><th data-i18n="product_label">Product</th><th data-i18n="category_label">Category</th><th data-i18n="price_label">Price (EGP)</th><th data-i18n="availability">Availability</th><th data-i18n="actions">Actions</th></tr></thead><tbody id="productsTableBody"></tbody></table></div>
     </section>
+    <section id="sizesPanel" aria-labelledby="sizesTab" hidden>
+      <h1 class="h4" data-i18n="manage_sizes">Sizes</h1>
+      <p class="text-muted-soft" data-i18n="sizes_help"></p>
+      <form id="sizeForm" class="mb-4"><fieldset id="sizeFields"><div class="row g-3 align-items-end">
+        <div class="col-md-4"><label for="sizeLabelEn" class="form-label" data-i18n="size_en">English size label</label><input id="sizeLabelEn" class="form-control" maxlength="120" required dir="ltr"></div>
+        <div class="col-md-4"><label for="sizeLabelAr" class="form-label" data-i18n="size_ar">Arabic size label</label><input id="sizeLabelAr" class="form-control" maxlength="120" required dir="rtl"></div>
+        <div class="col-md-4 d-flex gap-2"><button class="btn btn-forest" type="submit" data-i18n="save_size">Save size</button><button id="cancelSizeEdit" class="btn btn-outline-forest" type="button" hidden data-i18n="cancel">Cancel</button></div>
+      </div></fieldset></form>
+      <button id="refreshSizes" class="btn btn-outline-forest mb-3" data-i18n="refresh">Refresh</button>
+      <div id="sizesStatus" role="status" class="text-muted-soft mb-3"></div>
+      <div class="table-responsive"><table class="table orders-table align-middle"><thead><tr><th data-i18n="size_en">English size label</th><th data-i18n="size_ar">Arabic size label</th><th data-i18n="availability">Availability</th><th data-i18n="actions">Actions</th></tr></thead><tbody id="sizesTableBody"></tbody></table></div>
+    </section>
     <section id="shippingPanel" aria-labelledby="shippingTab" hidden>
       <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
         <div><h1 class="h4" data-i18n="manage_shipping">Shipping</h1><p class="text-muted-soft mb-0" data-i18n="shipping_help">Set the delivery fee for each city. Changes apply to new orders.</p></div>
@@ -217,14 +231,13 @@
         <fieldset id="productEditorFields"><div class="row g-3">
           <div class="col-md-6"><label class="form-label" for="product_name_en" data-i18n="field_name_en">English name</label><input type="text" class="form-control" id="product_name_en" name="name_en" maxlength="160" dir="ltr" required></div>
           <div class="col-md-6"><label class="form-label" for="product_name_ar" data-i18n="field_name_ar">Arabic name</label><input type="text" class="form-control" id="product_name_ar" name="name_ar" maxlength="160" dir="rtl" required></div>
-          <div class="col-md-6"><label class="form-label" for="product_unit_en" data-i18n="field_unit_en">English unit / pack size</label><input type="text" class="form-control" id="product_unit_en" name="unit_en" maxlength="120" dir="ltr"></div>
-          <div class="col-md-6"><label class="form-label" for="product_unit_ar" data-i18n="field_unit_ar">Arabic unit / pack size</label><input type="text" class="form-control" id="product_unit_ar" name="unit_ar" maxlength="120" dir="rtl"></div>
+          <div class="col-12"><h3 class="h6" data-i18n="sizes_prices">Sizes and prices</h3><div id="productVariantRows"></div><button type="button" id="addVariantRow" class="btn btn-sm btn-outline-forest mt-2" data-i18n="add_size">Add size</button></div>
           <div class="col-md-6"><label class="form-label" for="product_desc_en" data-i18n="field_desc_en">English description</label><textarea class="form-control" id="product_desc_en" name="desc_en" maxlength="5000" dir="ltr" rows="3"></textarea></div>
           <div class="col-md-6"><label class="form-label" for="product_desc_ar" data-i18n="field_desc_ar">Arabic description</label><textarea class="form-control" id="product_desc_ar" name="desc_ar" maxlength="5000" dir="rtl" rows="3"></textarea></div>
           <div class="col-md-6"><label class="form-label" for="product_ingredients_en" data-i18n="field_ingredients_en">English ingredients</label><textarea class="form-control" id="product_ingredients_en" name="ingredients_en" maxlength="2000" dir="ltr" rows="3"></textarea></div>
           <div class="col-md-6"><label class="form-label" for="product_ingredients_ar" data-i18n="field_ingredients_ar">Arabic ingredients</label><textarea class="form-control" id="product_ingredients_ar" name="ingredients_ar" maxlength="2000" dir="rtl" rows="3"></textarea></div>
           <div class="col-md-6"><label for="product_category" class="form-label" data-i18n="category_label">Category</label><select id="product_category" name="category" class="form-select" required></select></div>
-          <div class="col-md-6"><label for="product_price" class="form-label" data-i18n="price_label">Price (EGP)</label><input type="number" min="0" max="1000000" step="0.01" id="product_price" name="price" class="form-control" required></div>
+
           <div class="col-12"><label for="product_image" class="form-label" data-i18n="cover_image">Cover image URL or path</label><input type="text" id="product_image" name="image" class="form-control" maxlength="2000" dir="ltr" placeholder="assets/img/products/1.jpg"></div>
           <div class="col-12"><label for="product_photo" class="form-label" data-i18n="upload_photo">Or upload a cover photo</label><input type="file" id="product_photo" class="form-control" accept="image/jpeg,image/png,image/webp,image/gif"><div class="form-text" data-i18n="photo_help">JPG, PNG, WebP or GIF, up to 5 MB. Uploading replaces the cover image.</div></div>
           <div class="col-12"><label for="product_images" class="form-label" data-i18n="gallery_images">Gallery image URLs or paths (one per line)</label><textarea id="product_images" class="form-control" rows="3" dir="ltr"></textarea><div class="form-text" data-i18n="gallery_help">Optional, up to 12 images. Leave photos empty to use a product icon.</div></div>
@@ -302,6 +315,7 @@
   <script src="assets/js/egypt-cities.js"></script>
   <script src="assets/js/admin.js"></script>
   <script src="assets/js/admin-products.js"></script>
+  <script src="assets/js/admin-sizes.js"></script>
   <script src="assets/js/admin-shipping.js"></script>
   <script src="assets/js/admin-content.js"></script>
 </body>

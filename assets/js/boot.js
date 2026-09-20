@@ -3,7 +3,8 @@
    so there is no layout flash. Must be loaded with a plain <script src>
    (no defer/async) as the very first thing in <head>. */
 (function () {
-  var lang = localStorage.getItem('os_lang') || 'en';
+  var savedLang = localStorage.getItem('os_lang');
+  var lang = savedLang === 'en' ? 'en' : 'ar';
   document.documentElement.setAttribute('lang', lang);
   document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
   window.OS_LANG = lang;

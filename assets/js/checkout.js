@@ -1,6 +1,5 @@
 /* Organic Special — cart & checkout logic */
 
-osRequireLang();
 
 const EG_MOBILE_RE = /^01[0125][0-9]{8}$/;
 let osShippingRates = [];
@@ -74,18 +73,18 @@ function renderCart() {
   wrap.innerHTML = lines
     .map(
       (l) => `
-    <div class="cart-line d-flex align-items-center gap-3" data-id="${l.id}">
+    <div class="cart-line d-flex align-items-center gap-3" data-id="${l.id}" data-size-id="${l.size_id}">
       <div class="cart-line-icon">${osProductMediaMarkup(l.product)}</div>
-      <div class="flex-grow-1">
+      <div class="flex-grow-1 cart-line-info">
         <div class="fw-bold">${osImageAttribute(osProductName(l.product))}</div>
-        <div class="text-muted-soft small">${osFormatPrice(l.product.price)} <span data-i18n="each">each</span></div>
+        <div class="text-muted-soft small">${osImageAttribute(osVariantLabel(l.variant))} · ${osFormatPrice(l.variant.price)} <span data-i18n="each">each</span></div>
       </div>
       <div class="qty-stepper">
         <button type="button" class="line-minus" aria-label="Decrease quantity">−</button>
         <input type="text" class="line-qty" value="${l.qty}" inputmode="numeric" aria-label="Quantity">
         <button type="button" class="line-plus" aria-label="Increase quantity">+</button>
       </div>
-      <div class="text-end" style="min-width:80px;">
+      <div class="text-end cart-line-total" style="min-width:80px;">
         <div class="fw-bold">${osFormatPrice(l.lineTotal)}</div>
         <button type="button" class="btn btn-link btn-sm text-danger p-0 line-remove" data-i18n="remove">Remove</button>
       </div>
@@ -97,23 +96,24 @@ function renderCart() {
 
   wrap.querySelectorAll('.cart-line').forEach((row) => {
     const id = Number(row.getAttribute('data-id'));
+    const sizeId = Number(row.dataset.sizeId);
     row.querySelector('.line-minus').addEventListener('click', () => {
-      const current = osGetCart().find((l) => l.id === id);
-      osUpdateCartQty(id, (current ? current.qty : 1) - 1);
+      const current = osGetCart().find((l) => l.id === id && l.size_id === sizeId);
+      osUpdateCartQty(id, (current ? current.qty : 1) - 1, sizeId);
       renderCart();
     });
     row.querySelector('.line-plus').addEventListener('click', () => {
-      const current = osGetCart().find((l) => l.id === id);
-      osUpdateCartQty(id, (current ? current.qty : 0) + 1);
+      const current = osGetCart().find((l) => l.id === id && l.size_id === sizeId);
+      osUpdateCartQty(id, (current ? current.qty : 0) + 1, sizeId);
       renderCart();
     });
     row.querySelector('.line-qty').addEventListener('change', (e) => {
       const v = Math.max(1, parseInt(e.target.value, 10) || 1);
-      osUpdateCartQty(id, v);
+      osUpdateCartQty(id, v, sizeId);
       renderCart();
     });
     row.querySelector('.line-remove').addEventListener('click', () => {
-      osRemoveFromCart(id);
+      osRemoveFromCart(id, sizeId);
       renderCart();
     });
   });
@@ -189,7 +189,8 @@ document.getElementById('checkoutForm').addEventListener('submit', function (e) 
       id: l.product.id,
       name: osProductName(l.product),
       qty: l.qty,
-      price: l.product.price,
+      price: l.variant.price,
+      size_id: l.size_id,
     })),
     shipping_fee: osCartShipping(),
     total: osCartGrandTotal(),
@@ -243,16 +244,7 @@ Promise.all([osCatalogReady, loadCheckoutShipping()]).then(([loaded]) => {
     showOrderError(osT('catalog_error'));
     return;
   }
-  const cart = osGetCart();
-  const available = cart.filter((line) => OS_PRODUCTS.some((p) => p.id === line.id));
-  if (available.length !== cart.length) {
-    osSaveCart(available);
-    const notice = document.createElement('div');
-    notice.className = 'alert alert-warning';
-    notice.setAttribute('role', 'status');
-    notice.textContent = osT('cart_unavailable_removed');
-    document.getElementById('cartEmptyState').before(notice);
-  }
+  osReconcileCart();
   document.getElementById('placeOrderBtn').disabled = false;
   renderCart();
 });

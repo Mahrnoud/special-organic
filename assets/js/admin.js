@@ -1,13 +1,14 @@
 /* Organic Special — admin dashboard logic */
 
-const OS_ORDER_STATUSES = ['pending', 'confirmed', 'shipped', 'delivered', 'returned'];
+const OS_ORDER_STATUSES = ['pending', 'confirmed', 'delivered', 'completed', 'returned'];
 
 /* Orders currently loaded in the table (already filtered by whatever the
    admin has selected). Kept around so Export can reuse the same data
    without an extra request. */
 let osLastOrders = [];
 
-function statusSelectHtml(orderId, status) {
+function statusSelectHtml(orderId, status, deleted = false) {
+  if (deleted) return `<span class="badge status-select-${status}">${osT('status_' + status)}</span>`;
   const options = OS_ORDER_STATUSES.map(
     (s) => `<option value="${s}" ${s === status ? 'selected' : ''}>${osT('status_' + s)}</option>`
   ).join('');
@@ -34,6 +35,7 @@ function populateCityFilter() {
 
 function currentFilters() {
   return {
+    deleted: document.getElementById('orderView').value,
     country: document.getElementById('filterCountry').value,
     city: document.getElementById('filterCity').value,
     status: document.getElementById('filterStatus').value,
@@ -66,12 +68,14 @@ function osAdminNotice(message, error = false) {
 }
 
 function syncOrderSelection() {
+  const deletedView = document.getElementById('orderView').value === '1';
   const count = osSelectedOrders.size;
+  document.querySelector('.bulk-order-bar').classList.toggle('d-none', deletedView);
   document.getElementById('selectedOrderCount').textContent = osT('orders_selected').replace('{count}', count);
   const all = document.getElementById('selectAllOrders');
   all.checked = osLastOrders.length > 0 && count === osLastOrders.length;
   all.indeterminate = count > 0 && count < osLastOrders.length;
-  all.disabled = osOrdersBusy || !osLastOrders.length;
+  all.disabled = osOrdersBusy || deletedView || !osLastOrders.length;
   for (const id of ['bulkOrderStatus', 'applyBulkStatus', 'clearSelection']) {
     document.getElementById(id).disabled = osOrdersBusy || !count;
   }
@@ -81,7 +85,8 @@ function syncOrderSelection() {
     checkbox.closest('tr').classList.toggle('order-selected', checkbox.checked);
   });
   document.querySelectorAll('#ordersPanel .status-select').forEach((select) => { select.disabled = osOrdersBusy; });
-  document.getElementById('detailsStatusSelect').disabled = osOrdersBusy;
+  document.getElementById('detailsStatusSelect').disabled = osOrdersBusy || document.getElementById('detailsStatusSelect').dataset.deleted === '1';
+  document.querySelectorAll('.delete-order-btn, .restore-order-btn').forEach(button => { button.disabled = osOrdersBusy; });
 }
 
 async function updateOrderStatus(orderId, status, selectEl) {
@@ -136,11 +141,11 @@ async function loadOrders() {
     noOrders.classList.toggle('d-none', osLastOrders.length > 0);
     tbody.innerHTML = osLastOrders.map((o) => `
       <tr data-id="${o.id}">
-        <td class="order-checkbox-cell"><input type="checkbox" class="form-check-input order-selector" data-id="${o.id}" aria-label="${osEscape(osT('select_order'))} #${o.id}"></td>
+        <td class="order-checkbox-cell"><input ${o.deleted_at ? 'hidden' : ''} type="checkbox" class="form-check-input order-selector" data-id="${o.id}" aria-label="${osEscape(osT('select_order'))} #${o.id}"></td>
         <td>#${o.id}</td><td>${osEscape(o.full_name)}</td><td>${osEscape(o.city)}</td>
         <td>${osEscape(o.mobile_whatsapp)}</td><td>${osFormatPrice(o.total_amount)}</td>
-        <td>${statusSelectHtml(o.id, o.status)}</td><td>${osEscape(formatDate(o.created_at))}</td>
-        <td><button class="btn btn-sm btn-outline-forest view-order-btn" data-id="${o.id}">${osT('view')}</button></td>
+        <td>${statusSelectHtml(o.id, o.status, !!o.deleted_at)}</td><td>${osEscape(formatDate(o.created_at))}${o.deleted_at ? `<div class="small text-muted-soft">${osT('deleted_on')}: ${osEscape(formatDate(o.deleted_at))}</div>` : ''}</td>
+        <td><div class="d-flex gap-2"><button class="btn btn-sm btn-outline-forest view-order-btn" data-id="${o.id}">${osT('view')}</button><button class="btn btn-sm ${o.deleted_at ? 'btn-outline-forest restore-order-btn' : 'btn-outline-danger delete-order-btn'}" data-id="${o.id}">${osT(o.deleted_at ? 'restore_order' : 'delete_order')}</button></div></td>
       </tr>`).join('');
     tbody.querySelectorAll('.order-selector').forEach((checkbox) => {
       checkbox.addEventListener('change', () => {
@@ -152,9 +157,12 @@ async function loadOrders() {
     tbody.querySelectorAll('.status-select').forEach((select) => {
       select.addEventListener('change', () => updateOrderStatus(Number(select.dataset.id), select.value, select));
     });
+    tbody.querySelectorAll('.delete-order-btn, .restore-order-btn').forEach(button => {
+      button.onclick = event => { event.stopPropagation(); changeOrderDeletion(Number(button.dataset.id), button.classList.contains('delete-order-btn')); };
+    });
     tbody.querySelectorAll('tr').forEach((row) => {
       row.addEventListener('click', (event) => {
-        if (event.target.closest('.status-select, .order-checkbox-cell')) return;
+        if (event.target.closest('.status-select, .order-checkbox-cell, .delete-order-btn, .restore-order-btn')) return;
         openOrderDetails(Number(row.dataset.id));
       });
     });
@@ -224,7 +232,8 @@ function openOrderDetails(orderId) {
       ).join('');
       statusSelect.className = `form-select form-select-sm status-select status-select-${o.status}`;
       statusSelect.dataset.status = o.status;
-      statusSelect.disabled = osOrdersBusy;
+      statusSelect.dataset.deleted = o.deleted_at ? '1' : '0';
+      statusSelect.disabled = osOrdersBusy || !!o.deleted_at;
       statusSelect.onchange = () => {
         statusSelect.className = `form-select form-select-sm status-select status-select-${statusSelect.value}`;
         updateOrderStatus(o.id, statusSelect.value, statusSelect);
@@ -234,7 +243,7 @@ function openOrderDetails(orderId) {
       list.innerHTML = o.items
         .map(
           (it) => `<li class="list-group-item d-flex justify-content-between">
-            <span>${osEscape(it.name)} × ${osEscape(it.qty)}</span>
+            <span>${osEscape(it.name)}${orderItemSize(it) ? ' — ' + osEscape(orderItemSize(it)) : ''} × ${osEscape(it.qty)}</span>
             <span class="fw-bold">${osFormatPrice(it.price * it.qty)}</span>
           </li>`
         )
@@ -266,6 +275,7 @@ function exportOrdersToExcel() {
     `${osT('total_col')} (${osT('currency')})`,
     osT('status_col'),
     osT('date_col'),
+    osT('deleted_on'),
   ];
 
   const rows = osLastOrders.map((o) => [
@@ -276,12 +286,13 @@ function exportOrdersToExcel() {
     o.address || '',
     o.mobile_whatsapp,
     o.mobile_additional || '',
-    (o.items || []).map((it) => `${osEscape(it.name)} × ${osEscape(it.qty)}`).join(', '),
+    (o.items || []).map((it) => `${it.name}${orderItemSize(it) ? ' — ' + orderItemSize(it) : ''} × ${it.qty}`).join(', '),
     Number(o.total_amount) - Number(o.shipping_fee || 0),
     Number(o.shipping_fee || 0),
     Number(o.total_amount),
     osT('status_' + o.status),
     formatDate(o.created_at),
+    o.deleted_at ? formatDate(o.deleted_at) : '',
   ]);
 
   const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
@@ -300,6 +311,7 @@ function exportOrdersToExcel() {
     { wch: 13 }, // Total
     { wch: 12 }, // Status
     { wch: 18 }, // Date
+    { wch: 18 }, // Deleted on
   ];
 
   // Freeze the header row so it stays visible while scrolling in Excel.
@@ -309,9 +321,13 @@ function exportOrdersToExcel() {
   XLSX.utils.book_append_sheet(wb, ws, osT('dashboard_title').slice(0, 31) || 'Orders');
 
   const dateStr = new Date().toISOString().slice(0, 10);
-  XLSX.writeFile(wb, `organic-special-orders-${dateStr}.xlsx`);
+  XLSX.writeFile(wb, `organic-special-${document.getElementById('orderView').value === '1' ? 'deleted-' : ''}orders-${dateStr}.xlsx`);
 }
 
+document.getElementById('orderView').addEventListener('change', () => {
+  bootstrap.Modal.getInstance(document.getElementById('orderDetailsModal'))?.hide();
+  loadOrders();
+});
 document.getElementById('filterCountry').addEventListener('change', loadOrders);
 document.getElementById('filterCity').addEventListener('change', loadOrders);
 document.getElementById('filterStatus').addEventListener('change', loadOrders);
@@ -347,7 +363,25 @@ fetch('api/check_session.php', { credentials: 'same-origin' })
     populateCityFilter();
     loadOrders();
     loadProducts();
+    loadSizes().catch(() => {});
     loadShipping();
     loadContent();
   })
   .catch(() => { window.location.href = 'admin-login.html'; });
+
+function orderItemSize(item) { return osLang() === 'ar' ? (item.size_ar || item.size_en || '') : (item.size_en || item.size_ar || ''); }
+async function changeOrderDeletion(id, deleted) {
+  if (osOrdersBusy) return;
+  if (deleted && !window.confirm(osT('delete_order_confirm').replace('{id}', id))) return;
+  osOrdersBusy = true;
+  syncOrderSelection();
+  try {
+    await osAdminRequest(`api/${deleted ? 'delete' : 'restore'}_order.php`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id })
+    });
+    bootstrap.Modal.getInstance(document.getElementById('orderDetailsModal'))?.hide();
+    osAdminNotice(osT(deleted ? 'order_deleted' : 'order_restored'));
+    await loadOrders();
+  } catch (error) { osAdminNotice(error.message || osT('request_error'), true); }
+  finally { osOrdersBusy = false; syncOrderSelection(); }
+}

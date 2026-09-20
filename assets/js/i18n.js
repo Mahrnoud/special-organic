@@ -122,7 +122,6 @@ const OS_DICT = {
     total_orders: "Total orders",
     pending_orders: "Pending",
     confirmed_orders: "Confirmed",
-    shipped_orders: "Shipped",
     delivered_orders: "Delivered",
     returned_orders: "Returned",
     order_id_col: "Order #",
@@ -139,7 +138,6 @@ const OS_DICT = {
     loading: "Loading…",
     status_pending: "Pending",
     status_confirmed: "Confirmed",
-    status_shipped: "Shipped",
     status_delivered: "Delivered",
     status_returned: "Returned",
     status_update_error: "Could not update the order status. Please try again.",
@@ -333,7 +331,6 @@ const OS_DICT = {
     total_orders: "إجمالي الطلبات",
     pending_orders: "قيد الانتظار",
     confirmed_orders: "مؤكدة",
-    shipped_orders: "تم الشحن",
     delivered_orders: "تم التوصيل",
     returned_orders: "مرتجعة",
     order_id_col: "رقم الطلب",
@@ -350,7 +347,6 @@ const OS_DICT = {
     loading: "جارٍ التحميل…",
     status_pending: "قيد الانتظار",
     status_confirmed: "مؤكد",
-    status_shipped: "تم الشحن",
     status_delivered: "تم التوصيل",
     status_returned: "مرتجع",
     status_update_error: "تعذر تحديث حالة الطلب. حاول مرة أخرى.",
@@ -576,7 +572,7 @@ Object.assign(OS_DICT.ar, {
 });
 
 function osLang() {
-  return localStorage.getItem('os_lang') || 'en';
+  return localStorage.getItem('os_lang') === 'en' ? 'en' : 'ar';
 }
 
 function osSetLang(lang) {
@@ -599,17 +595,32 @@ function osApplyI18n(root) {
   });
 }
 
-/* If someone lands on an inner page directly without picking a language yet,
-   send them to the splash/language screen first. */
-function osRequireLang() {
-  if (!localStorage.getItem('os_lang')) {
-    window.location.href = 'index.html';
-  }
-}
-
 function osFormatPrice(amount) {
   const n = Number(amount).toFixed(2).replace(/\.00$/, '');
   return `${n} ${osT('currency')}`;
 }
 
 document.addEventListener('DOMContentLoaded', () => osApplyI18n());
+
+Object.assign(OS_DICT.en, {
+  manage_sizes: 'Sizes', sizes_help: 'Create reusable sizes in English and Arabic. Set each product’s prices in Products. Archived sizes remain on existing products.',
+  size_label: 'Size', size_en: 'English size label', size_ar: 'Arabic size label', save_size: 'Save size', add_size: 'Add size',
+  size_saved: 'Size saved.', size_archived: 'Size archived.', size_restored: 'Size restored.', archive_size: 'Archive', restore_size: 'Restore',
+  sizes_prices: 'Sizes and prices', choose_size: 'Choose a size', size_required: 'Choose at least one size and enter its price.', duplicate_size: 'Each size can only appear once.',
+  size_load_error: 'Could not load sizes. Close this window and try again.', from_price: 'From', multiple_sizes: 'Available in multiple sizes',
+  completed_orders: 'Completed', status_completed: 'Completed', active_orders: 'Active orders', deleted_orders: 'Deleted orders',
+  delete_order: 'Delete', restore_order: 'Restore', delete_order_confirm: 'Move order #{id} to Deleted orders? You can restore it later.',
+  order_deleted: 'Order moved to Deleted orders.', order_restored: 'Order restored.', deleted_on: 'Deleted on',
+  cart_size_removed: 'Some cart items are no longer available or need a size selection. Please select those products and sizes again.'
+});
+Object.assign(OS_DICT.ar, {
+  manage_sizes: 'الأحجام', sizes_help: 'أضف أحجاماً باللغتين العربية والإنجليزية، وحدد سعر كل حجم من المنتجات. تبقى الأحجام المؤرشفة على المنتجات المرتبطة بها.',
+  size_label: 'الحجم', size_en: 'الحجم بالإنجليزية', size_ar: 'الحجم بالعربية', save_size: 'حفظ الحجم', add_size: 'إضافة حجم',
+  size_saved: 'تم حفظ الحجم.', size_archived: 'تمت أرشفة الحجم.', size_restored: 'تمت استعادة الحجم.', archive_size: 'أرشفة', restore_size: 'استعادة',
+  sizes_prices: 'الأحجام والأسعار', choose_size: 'اختر الحجم', size_required: 'اختر حجماً واحداً على الأقل وأدخل سعره.', duplicate_size: 'لا يمكن تكرار نفس الحجم.',
+  size_load_error: 'تعذر تحميل الأحجام. أغلق النافذة وحاول مجدداً.', from_price: 'يبدأ من', multiple_sizes: 'متوفر بأحجام متعددة',
+  completed_orders: 'مكتمل', status_completed: 'مكتمل', active_orders: 'الطلبات النشطة', deleted_orders: 'الطلبات المحذوفة',
+  delete_order: 'حذف', restore_order: 'استعادة', delete_order_confirm: 'نقل الطلب #{id} إلى الطلبات المحذوفة؟ يمكنك استعادته لاحقاً.',
+  order_deleted: 'تم نقل الطلب إلى الطلبات المحذوفة.', order_restored: 'تمت استعادة الطلب.', deleted_on: 'تاريخ الحذف',
+  cart_size_removed: 'بعض عناصر السلة لم تعد متاحة أو تحتاج لاختيار حجم. يرجى اختيار هذه المنتجات والأحجام مجدداً.'
+});

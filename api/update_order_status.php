@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_response(['success' => false, 'message' => 'Method not allowed.'], 405);
 }
 
-$allowedStatuses = ['pending', 'confirmed', 'shipped', 'delivered', 'returned'];
+$allowedStatuses = ['pending', 'confirmed', 'delivered', 'completed', 'returned'];
 
 $body = read_json_body();
 $ids = $body['ids'] ?? [$body['id'] ?? null];
@@ -29,13 +29,13 @@ $pdo = get_db();
 $pdo->exec('BEGIN IMMEDIATE');
 try {
     $placeholders = implode(',', array_fill(0, count($ids), '?'));
-    $check = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE id IN ($placeholders)");
+    $check = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE deleted_at IS NULL AND id IN ($placeholders)");
     $check->execute($ids);
     if ((int)$check->fetchColumn() !== count($ids)) {
         $pdo->exec('ROLLBACK');
-        json_response(['success' => false, 'message' => 'One or more orders no longer exist. Refresh and try again.'], 404);
+        json_response(['success' => false, 'message' => 'One or more orders no longer exist or have been deleted. Refresh and try again.'], 404);
     }
-    $stmt = $pdo->prepare("UPDATE orders SET status = ? WHERE id IN ($placeholders)");
+    $stmt = $pdo->prepare("UPDATE orders SET status = ? WHERE deleted_at IS NULL AND id IN ($placeholders)");
     $stmt->execute([$status, ...$ids]);
     $pdo->exec('COMMIT');
 } catch (Throwable $e) {

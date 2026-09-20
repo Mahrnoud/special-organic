@@ -22,47 +22,9 @@
     </div>
   </div>
 
-  <!-- Language selection: shown after splash -->
-  <div id="langScreen" class="os-lang-screen d-none">
-    <div class="os-lang-card">
-      <img src="assets/img/logo.png" alt="Organic Special" style="width:64px;" class="mb-4 d-block mx-auto rounded-3">
-      <p class="text-center mb-4" style="color:#cfe6cf; font-size:0.95rem;">
-        Choose your language &nbsp;/&nbsp; اختر لغتك
-      </p>
-
-      <div class="os-lang-options">
-        <button type="button" class="os-lang-option" data-lang="en">
-          <i class="bi bi-translate"></i>
-          <span>
-            <span class="lang-native">English</span>
-            <span class="lang-sub">Continue in English</span>
-          </span>
-        </button>
-
-        <button type="button" class="os-lang-option" data-lang="ar" dir="rtl">
-          <i class="bi bi-translate"></i>
-          <span>
-            <span class="lang-native">العربية</span>
-            <span class="lang-sub">المتابعة بالعربية</span>
-          </span>
-        </button>
-      </div>
-    </div>
-  </div>
-
   <script>
-    // Show splash for 3 seconds, then reveal the language picker.
-    setTimeout(function () {
-      document.getElementById('splashScreen').classList.add('d-none');
-      document.getElementById('langScreen').classList.remove('d-none');
-    }, 3000);
-
-    document.querySelectorAll('.os-lang-option').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        localStorage.setItem('os_lang', btn.getAttribute('data-lang'));
-        window.location.href = 'home.html';
-      });
-    });
+    // Keep the branded splash, then enter with the saved language or Arabic.
+    setTimeout(function () { window.location.replace('home.html'); }, 3000);
   </script>
 </body>
 </html>

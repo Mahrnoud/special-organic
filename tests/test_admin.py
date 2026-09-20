@@ -34,7 +34,7 @@ class AdminIntegrationTests(unittest.TestCase):
                 city TEXT, country TEXT, mobile_whatsapp TEXT, mobile_additional TEXT, items TEXT,
                 total_amount REAL, status TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)''')
             db.execute('''INSERT INTO orders (full_name, city, country, mobile_whatsapp, items, total_amount, status)
-                VALUES ('Historical customer', 'Cairo', 'Egypt', '01000000000', '[{"id":1,"name":"Original name","qty":1,"price":42}]', 42, 'pending')''')
+                VALUES ('Historical customer', 'Cairo', 'Egypt', '01000000000', '[{"id":1,"name":"Original name","qty":1,"price":42}]', 42, 'shipped')''')
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', 0))
             port = sock.getsockname()[1]
@@ -71,14 +71,14 @@ class AdminIntegrationTests(unittest.TestCase):
 
     def product(self, **overrides):
         product = dict(name_en='Test tea <b>literal</b>', name_ar='شاي تجريبي', category='tea',
-                       unit_en='100g', unit_ar='١٠٠ جرام', price=32.50, images=[], image='')
+                       variants=[dict(size_id=1, price=32.50)], images=[], image='')
         product.update(overrides)
         code, data = self.request('save_product.php', product)
         self.assertEqual(code, 200, data)
         return data['product_id'], product
 
     def order(self, product_id, price=32.50, **overrides):
-        payload = dict(full_name='Test customer', city='Cairo', address='Test street',
+        payload = dict(language='en', full_name='Test customer', city='Cairo', address='Test street',
                        mobile_whatsapp='01000000000', items=[dict(id=product_id, qty=2, price=price, name='Untrusted name')])
         payload.update(overrides)
         return self.request('create_order.php', payload, anonymous=True)
@@ -93,11 +93,17 @@ class AdminIntegrationTests(unittest.TestCase):
         self.assertEqual(data['order']['items'][0]['name'], 'Original name')
         self.assertEqual(data['order']['total_amount'], 42)
         self.assertEqual(data['order']['shipping_fee'], 0)
+        self.assertEqual(data['order']['status'], 'confirmed')
+        self.assertIsNone(data['order']['deleted_at'])
+        self.assertEqual(len(products[1]['variants']), 1)
+        self.assertEqual(products[1]['variants'][0]['label_en'], '250g pack')
 
     def test_admin_required(self):
         for endpoint, body in [('save_product.php', {}), ('archive_product.php', {'id': 1, 'archived': True}),
-                               ('update_order_status.php', {'ids': [1], 'status': 'shipped'}), ('get_products.php?admin=1', None),
-                               ('save_shipping.php', {'city': 'Cairo', 'fee': 10})]:
+                               ('update_order_status.php', {'ids': [1], 'status': 'completed'}), ('get_products.php?admin=1', None),
+                               ('save_shipping.php', {'city': 'Cairo', 'fee': 10}),
+                               ('get_sizes.php', None), ('save_size.php', {}), ('archive_size.php', {}),
+                               ('delete_order.php', {'id': 1}), ('restore_order.php', {'id': 1})]:
             self.assertEqual(self.request(endpoint, body, anonymous=True)[0], 401)
         self.assertEqual(self.request('get_products.php', anonymous=True)[0], 200)
 
@@ -213,7 +219,7 @@ class AdminIntegrationTests(unittest.TestCase):
         product_id, product = self.product()
         code, order = self.order(product_id)
         self.assertEqual(code, 200, order)
-        product.update(id=product_id, name_en='Renamed tea', price=50)
+        product.update(id=product_id, name_en='Renamed tea', variants=[dict(size_id=1, price=50)])
         self.assertEqual(self.request('save_product.php', product)[0], 200)
         self.assertEqual(self.request('archive_product.php', {'id': product_id, 'archived': True})[0], 200)
         _, public = self.request('get_products.php', anonymous=True)
@@ -246,27 +252,27 @@ class AdminIntegrationTests(unittest.TestCase):
     def test_bulk_status_is_atomic_and_updates_stats(self):
         product_id, _ = self.product()
         ids = [self.order(product_id)[1]['order_id'] for _ in range(2)]
-        code, data = self.request('update_order_status.php', {'ids': ids + [ids[0]], 'status': 'shipped'})
+        code, data = self.request('update_order_status.php', {'ids': ids + [ids[0]], 'status': 'completed'})
         self.assertEqual(code, 200)
         self.assertEqual(data['updated_count'], 2)
         for order_id in ids:
-            self.assertEqual(self.request('get_order.php?id=' + str(order_id))[1]['order']['status'], 'shipped')
+            self.assertEqual(self.request('get_order.php?id=' + str(order_id))[1]['order']['status'], 'completed')
         self.assertEqual(self.request('update_order_status.php', {'ids': ids + [999999], 'status': 'returned'})[0], 404)
         for order_id in ids:
-            self.assertEqual(self.request('get_order.php?id=' + str(order_id))[1]['order']['status'], 'shipped')
-        _, data = self.request('get_orders.php?status=shipped')
-        self.assertTrue(all(o['status'] == 'shipped' for o in data['orders']))
-        self.assertGreaterEqual(data['stats']['shipped'], 2)
+            self.assertEqual(self.request('get_order.php?id=' + str(order_id))[1]['order']['status'], 'completed')
+        _, data = self.request('get_orders.php?status=completed')
+        self.assertTrue(all(o['status'] == 'completed' for o in data['orders']))
+        self.assertGreaterEqual(data['stats']['completed'], 2)
         self.assertEqual(self.request('update_order_status.php', {'id': ids[0], 'status': 'delivered'})[0], 200)
 
     def test_bulk_rejects_invalid_payloads(self):
         for ids in [[], ['1'], [True], [0], [-1], [1.5], '1']:
-            self.assertEqual(self.request('update_order_status.php', {'ids': ids, 'status': 'shipped'})[0], 422)
+            self.assertEqual(self.request('update_order_status.php', {'ids': ids, 'status': 'completed'})[0], 422)
         self.assertEqual(self.request('update_order_status.php', {'ids': [1], 'status': 'invalid'})[0], 422)
 
     def test_product_validation(self):
         _, valid = self.product()
-        for changes in [dict(price=-1), dict(price='2'), dict(name_ar=''), dict(category='invalid'),
+        for changes in [dict(variants=[dict(size_id=1, price=-1)]), dict(variants=[dict(size_id=1, price='2')]), dict(name_ar=''), dict(category='invalid'),
                         dict(image='javascript:alert(1)'), dict(image='assets/img/../../secret.png'),
                         dict(icon='bi-x" onclick="alert(1)'), dict(images=['data:text/html,test']), dict(images=[''] * 13)]:
             self.assertEqual(self.request('save_product.php', dict(valid, **changes))[0], 422, changes)
@@ -274,7 +280,7 @@ class AdminIntegrationTests(unittest.TestCase):
         self.assertEqual(self.request('archive_product.php', {'id': 999999, 'archived': True})[0], 404)
 
     def test_image_upload(self):
-        product = dict(name_en='Photo test', name_ar='اختبار الصورة', category='seeds', price=10)
+        product = dict(name_en='Photo test', name_ar='اختبار الصورة', category='seeds', variants=[dict(size_id=1, price=10)])
         image = base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=')
         for filename, contents, expected in [('photo.png', image, 200), ('fake.png', b'<?php echo "bad"; ?>', 422)]:
             boundary = 'OrganicTestBoundary'
@@ -291,6 +297,97 @@ class AdminIntegrationTests(unittest.TestCase):
                     self.assertTrue((self.root / saved['image']).is_file())
             except urllib.error.HTTPError as error:
                 self.assertEqual(error.code, expected)
+
+
+    def test_sizes_and_multiple_price_snapshots(self):
+        import uuid
+        label = '750g ' + uuid.uuid4().hex[:8]
+        code, size = self.request('save_size.php', dict(label_en=label, label_ar='عبوة اختبار'))
+        self.assertEqual(code, 200, size)
+        size_id = size['size_id']
+        self.assertEqual(self.request('save_size.php', dict(label_en=label, label_ar='عبوة اختبار'))[0], 422)
+        self.assertEqual(self.request('save_size.php', dict(label_en='', label_ar='اختبار'))[0], 422)
+        variants = [dict(size_id=1, price=32.5), dict(size_id=size_id, price=75.25)]
+        product_id, product = self.product(variants=variants)
+        product['id'] = product_id
+        # A multi-size product cannot be checked out without a selection.
+        self.assertEqual(self.order(product_id)[0], 409)
+        items = [dict(id=product_id, size_id=1, qty=2, price=32.5), dict(id=product_id, size_id=size_id, qty=3, price=75.25)]
+        code, order = self.order(product_id, items=items)
+        self.assertEqual(code, 200, order)
+        _, original = self.request('get_order.php?id=' + str(order['order_id']))
+        self.assertEqual(original['order']['total_amount'], 340.75)
+        self.assertEqual(len(original['order']['items']), 2)
+        self.assertEqual(original['order']['items'][1]['size_en'], label)
+        self.assertEqual(self.request('save_size.php', dict(id=size_id, label_en=label + ' new', label_ar='حجم جديد'))[0], 200)
+        self.assertEqual(self.request('archive_size.php', dict(id=size_id, archived=True))[0], 200)
+        # An existing assignment remains editable and sellable while its size is archived.
+        self.assertEqual(self.request('save_product.php', product)[0], 200)
+        self.assertEqual(self.order(product_id, items=items)[0], 200)
+        self.assertEqual(self.request('save_product.php', dict(product, id=None))[0], 422)
+        product['variants'] = [dict(size_id=1, price=40)]
+        self.assertEqual(self.request('save_product.php', product)[0], 200)
+        self.assertEqual(self.order(product_id, items=items)[0], 409)
+        self.assertEqual(self.order(product_id, items=[items[1]])[0], 409)
+        self.assertEqual(self.request('save_product.php', dict(product, variants=variants))[0], 422)
+        _, saved = self.request('get_order.php?id=' + str(order['order_id']))
+        self.assertEqual(saved['order'], original['order'])
+        self.assertEqual(self.request('archive_size.php', dict(id=size_id, archived=False))[0], 200)
+        self.assertEqual(self.request('save_product.php', dict(product, variants=variants))[0], 200)
+        _, catalog = self.request('get_products.php')
+        saved_product = next(p for p in catalog['products'] if p['id'] == product_id)
+        self.assertEqual(saved_product['price'], 32.5)
+        self.assertEqual(saved_product['variants'][1]['label_en'], label + ' new')
+
+    def test_variant_validation_is_atomic(self):
+        product_id, product = self.product()
+        product['id'] = product_id
+        invalid = [[], None, [dict(size_id=1, price=1), dict(size_id=1, price=2)],
+                   [dict(size_id=99999, price=1)], [dict(size_id=True, price=1)],
+                   [dict(size_id=1, price=True)], [dict(size_id=1, price=1000001)]]
+        for variants in invalid:
+            self.assertEqual(self.request('save_product.php', dict(product, variants=variants, name_en='Must not persist'))[0], 422)
+        _, catalog = self.request('get_products.php')
+        saved = next(p for p in catalog['products'] if p['id'] == product_id)
+        self.assertEqual(saved['name_en'], product['name_en'])
+        self.assertEqual(saved['variants'][0]['price'], 32.5)
+
+    def test_delete_restore_and_atomic_status_updates(self):
+        product_id, _ = self.product()
+        ids = [self.order(product_id)[1]['order_id'] for _ in range(2)]
+        self.request('update_order_status.php', dict(ids=ids, status='completed'))
+        _, original = self.request('get_order.php?id=' + str(ids[0]))
+        self.assertEqual(self.request('delete_order.php', dict(id=ids[0]))[0], 200)
+        self.assertEqual(self.request('delete_order.php', dict(id=ids[0]))[0], 200)
+        _, active = self.request('get_orders.php')
+        self.assertNotIn(ids[0], [o['id'] for o in active['orders']])
+        self.assertEqual(active['stats']['total'], len(active['orders']))
+        _, deleted = self.request('get_orders.php?deleted=1&status=completed&q=' + str(ids[0]))
+        self.assertEqual([o['id'] for o in deleted['orders']], [ids[0]])
+        self.assertEqual(deleted['stats']['total'], 1)
+        self.assertIsNotNone(deleted['orders'][0]['deleted_at'])
+        self.assertEqual(self.request('update_order_status.php', dict(ids=ids, status='returned'))[0], 404)
+        self.assertEqual(self.request('get_order.php?id=' + str(ids[1]))[1]['order']['status'], 'completed')
+        self.assertEqual(self.request('restore_order.php', dict(id=ids[0]))[0], 200)
+        self.assertEqual(self.request('get_order.php?id=' + str(ids[0]))[1]['order'], original['order'])
+        self.assertEqual(self.request('get_orders.php?deleted=1')[1]['stats']['total'], 0)
+        self.assertEqual(self.request('update_order_status.php', dict(id=ids[0], status='shipped'))[0], 422)
+        self.assertEqual(self.request('get_orders.php?status=shipped')[0], 422)
+        self.assertEqual(self.request('get_orders.php?deleted=invalid')[0], 422)
+        for endpoint in ['delete_order.php', 'restore_order.php']:
+            self.assertEqual(self.request(endpoint)[0], 405)
+            self.assertEqual(self.request(endpoint, dict(id='1'))[0], 422)
+            self.assertEqual(self.request(endpoint, dict(id=999999))[0], 404)
+
+    def test_size_migration_is_repeatable(self):
+        # Repeated API requests must not recreate inactive variants or reset prices.
+        second_size = self.request('get_sizes.php')[1]['sizes'][1]['id']
+        product_id, product = self.product(variants=[dict(size_id=1, price=12), dict(size_id=second_size, price=23)])
+        self.request('save_product.php', dict(product, id=product_id, variants=[dict(size_id=second_size, price=24)]))
+        for _ in range(3):
+            _, data = self.request('get_products.php')
+            variants = next(p for p in data['products'] if p['id'] == product_id)['variants']
+            self.assertEqual([(v['size_id'], v['price']) for v in variants], [(second_size, 24)])
 
 
 if __name__ == '__main__':

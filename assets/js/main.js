@@ -1,9 +1,9 @@
 /* Organic Special — homepage logic */
 
-osRequireLang();
 
 let osSelectedProduct = null;
 let osModalQty = 1;
+let osSelectedVariant = null;
 
 /* ---------- Product grid ---------- */
 function renderProductGrid() {
@@ -24,9 +24,9 @@ function renderProductGrid() {
         </div>
         <div class="product-body">
           <button type="button" class="product-name product-details-button" aria-haspopup="dialog">${osImageAttribute(osProductName(p))}</button>
-          <div class="product-unit">${osImageAttribute(osProductUnit(p))}</div>
+          <div class="product-unit">${osImageAttribute(p.variants.length > 1 ? osT('multiple_sizes') : osProductUnit(p))}</div>
           <div class="product-card-actions">
-            <div class="product-price">${osFormatPrice(p.price)}</div>
+            <div class="product-price">${osProductPriceText(p)}</div>
             <button type="button" class="btn btn-forest product-quick-add" title="${osImageAttribute(osT('add_to_cart'))}" aria-label="${osImageAttribute(osT('add_to_cart') + ' — ' + osProductName(p))}">
               <i class="bi bi-cart-plus" aria-hidden="true"></i>
             </button>
@@ -42,8 +42,7 @@ function renderProductGrid() {
     const id = Number(card.getAttribute('data-id'));
     card.querySelector('.product-details-button').addEventListener('click', () => openProductModal(id));
     card.querySelector('.product-quick-add').addEventListener('click', () => {
-      osAddToCart(id, 1);
-      bootstrap.Toast.getOrCreateInstance(document.getElementById('cartToast')).show();
+      quickAddProduct(id);
     });
   });
 }
@@ -116,7 +115,13 @@ function openProductModal(productId) {
   const ingredients = osProductIngredients(osSelectedProduct).trim();
   document.getElementById('modalIngredients').textContent = ingredients;
   document.getElementById('modalIngredientsSection').hidden = !ingredients;
-  document.getElementById('modalPrice').textContent = osFormatPrice(osSelectedProduct.price);
+  const variants = osSelectedProduct.variants;
+  osSelectedVariant = variants.length === 1 ? variants[0] : null;
+  const select = document.getElementById('modalSizeSelect');
+  document.getElementById('modalSizeChoice').hidden = variants.length === 1;
+  select.innerHTML = `<option value="">${osT('choose_size')}</option>` + variants.map(v => `<option value="${v.size_id}">${osImageAttribute(osVariantLabel(v))} — ${osFormatPrice(v.price)}</option>`).join('');
+  select.value = osSelectedVariant?.size_id || '';
+  updateModalVariant();
   document.getElementById('qtyInput').value = osModalQty;
 
   bootstrap.Modal.getOrCreateInstance(document.getElementById('productModal')).show();
@@ -137,8 +142,8 @@ document.getElementById('qtyInput').addEventListener('change', (e) => {
 });
 
 document.getElementById('addToCartBtn').addEventListener('click', () => {
-  if (!osSelectedProduct) return;
-  osAddToCart(osSelectedProduct.id, osModalQty);
+  if (!osSelectedProduct || !osSelectedVariant) return;
+  if (!osAddToCart(osSelectedProduct.id, osModalQty, osSelectedVariant.size_id)) return;
   bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
   new bootstrap.Toast(document.getElementById('cartToast')).show();
 });
@@ -163,7 +168,10 @@ function renderOffer() {
   osLoadImages(document.getElementById('offerItems'));
 
   document.getElementById('offerOldPrice').textContent = osFormatPrice(regularPrice);
-  document.getElementById('offerNewPrice').textContent = osFormatPrice(bundle.price);
+  document.getElementById('offerNewPrice').textContent = osProductPriceText(bundle);
+  const comparable = bundle.variants.length === 1 && items.every(p => p.variants.length === 1) && saveAmount > 0;
+  document.getElementById('offerOldPrice').hidden = !comparable;
+  document.getElementById('offerSave').hidden = !comparable;
   document.getElementById('offerSave').textContent = `${osT('save_label')} ${osFormatPrice(saveAmount)}`;
 
   document.getElementById('offerSection').addEventListener('click', (e) => {
@@ -171,8 +179,7 @@ function renderOffer() {
     openProductModal(bundle.id);
   });
   document.getElementById('offerAddBtn').addEventListener('click', () => {
-    osAddToCart(bundle.id, 1);
-    new bootstrap.Toast(document.getElementById('cartToast')).show();
+    quickAddProduct(bundle.id);
   });
 }
 
@@ -221,6 +228,7 @@ Promise.all([osCatalogReady, osContentReady]).then(([loaded]) => {
   if (loaded) {
     document.getElementById('offerSection').hidden = false;
     renderOffer();
+    osReconcileCart();
     renderProductGrid();
     if (!OS_PRODUCTS.length) document.getElementById('productGrid').textContent = osT('no_products_available');
   } else {
@@ -251,7 +259,7 @@ function renderContentSlider() {
       <span class="os-hero-badge">${esc(osContentText(slide.tag))}</span>
       <h2 class="os-hero-name">${esc(osContentText(slide.title))}</h2>
       <p class="os-hero-desc">${esc(osContentText(slide.description))}</p>
-      <div class="os-hero-footer">${product ? `<span class="os-hero-price">${osFormatPrice(product.price)}</span><button type="button" class="btn btn-forest rounded-pill px-4">${esc(osContentText(slide.button))}</button>` : `<a class="btn btn-forest rounded-pill px-4" href="${esc(slide.href)}">${esc(osContentText(slide.button))}</a>`}</div>
+      <div class="os-hero-footer">${product ? `<span class="os-hero-price">${osProductPriceText(product)}</span><button type="button" class="btn btn-forest rounded-pill px-4">${esc(osContentText(slide.button))}</button>` : `<a class="btn btn-forest rounded-pill px-4" href="${esc(slide.href)}">${esc(osContentText(slide.button))}</a>`}</div>
     </div><div class="os-hero-media">${osImageMarkup(slide.image, osContentText(slide.title), 'bi-basket3-fill', false)}</div>`;
     if (product) {
       element.classList.remove('os-hero-slide-static');
@@ -268,8 +276,7 @@ function renderContentSlider() {
       });
     }
     if (product) element.querySelector('button').addEventListener('click', () => {
-      osAddToCart(product.id, 1);
-      bootstrap.Toast.getOrCreateInstance(document.getElementById('cartToast')).show();
+      quickAddProduct(product.id);
     });
     slider.insertBefore(element, controls);
   });
@@ -278,3 +285,19 @@ function renderContentSlider() {
   slider.hidden = count === 0;
   osLoadImages(slider);
 }
+
+function quickAddProduct(id) {
+  const product = OS_PRODUCTS.find(p => p.id === id);
+  if (!product) return;
+  if (product.variants.length > 1) { openProductModal(id); return; }
+  if (osAddToCart(id, 1)) bootstrap.Toast.getOrCreateInstance(document.getElementById('cartToast')).show();
+}
+function updateModalVariant() {
+  document.getElementById('modalUnit').textContent = osSelectedVariant ? osVariantLabel(osSelectedVariant) : osT('choose_size');
+  document.getElementById('modalPrice').textContent = osSelectedVariant ? osFormatPrice(osSelectedVariant.price) : osProductPriceText(osSelectedProduct);
+  document.getElementById('addToCartBtn').disabled = !osSelectedVariant;
+}
+document.getElementById('modalSizeSelect').onchange = event => {
+  osSelectedVariant = osSelectedProduct.variants.find(v => v.size_id === Number(event.target.value)) || null;
+  updateModalVariant();
+};

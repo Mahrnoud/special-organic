@@ -14,7 +14,7 @@ $id = $body['id'] ?? null;
 if ($id !== null && (!is_int($id) || $id < 1)) {
     json_response(['success' => false, 'message' => 'Invalid product ID.'], 422);
 }
-$fields = ['name_en' => 160, 'name_ar' => 160, 'unit_en' => 120, 'unit_ar' => 120,
+$fields = ['name_en' => 160, 'name_ar' => 160,
     'desc_en' => 5000, 'desc_ar' => 5000, 'ingredients_en' => 2000, 'ingredients_ar' => 2000,
     'category' => 20, 'image' => 2000, 'icon' => 80];
 $product = [];
@@ -31,11 +31,6 @@ if ($product['name_en'] === '' || $product['name_ar'] === '') {
 if (!in_array($product['category'], ['seeds', 'tea', 'grains', 'bundle'], true)) {
     json_response(['success' => false, 'message' => 'Choose a valid category.'], 422);
 }
-$price = $body['price'] ?? null;
-if ((!is_int($price) && !is_float($price)) || !is_finite((float)$price) || $price < 0 || $price > 1000000) {
-    json_response(['success' => false, 'message' => 'Enter a price between 0 and 1,000,000 EGP.'], 422);
-}
-$product['price'] = round($price, 2);
 $images = $body['images'] ?? [];
 if (!is_array($images) || count($images) > 12 || !valid_product_image($product['image'])) {
     json_response(['success' => false, 'message' => 'Use an image URL or a path under assets/img (up to 12 gallery images).'], 422);
@@ -55,6 +50,17 @@ if ($id !== null) {
     $check->execute([$id]);
     if (!$check->fetch()) json_response(['success' => false, 'message' => 'Product not found.'], 404);
 }
+
+$pdo->exec('BEGIN IMMEDIATE');
+try {
+    $variants = validate_product_variants($pdo, $id, $body['variants'] ?? null);
+} catch (InvalidArgumentException $e) {
+    $pdo->exec('ROLLBACK');
+    json_response(['success' => false, 'message' => $e->getMessage()], 422);
+}
+$product['price'] = $variants[0]['price'];
+$product['unit_en'] = $variants[0]['label_en'];
+$product['unit_ar'] = $variants[0]['label_ar'];
 
 // Only verified raster images are accepted; generated filenames cannot execute as PHP.
 $uploadedPath = null;
@@ -85,7 +91,13 @@ try {
         $stmt = $pdo->prepare('UPDATE products SET ' . $assignments . ', updated_at = CURRENT_TIMESTAMP WHERE id = ?');
         $stmt->execute([...array_values($product), $id]);
     }
+    $pdo->prepare('UPDATE product_sizes SET active = 0 WHERE product_id = ?')->execute([$id]);
+    $saveVariant = $pdo->prepare('INSERT INTO product_sizes(product_id, size_id, price, active) VALUES (?, ?, ?, 1)
+        ON CONFLICT(product_id, size_id) DO UPDATE SET price = excluded.price, active = 1');
+    foreach ($variants as $v) $saveVariant->execute([$id, $v['size_id'], $v['price']]);
+    $pdo->exec('COMMIT');
 } catch (Throwable $e) {
+    $pdo->exec('ROLLBACK');
     if ($uploadedPath) unlink($uploadedPath);
     throw $e;
 }

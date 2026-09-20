@@ -10,7 +10,7 @@ monthly cost.
 
 ```
 organic-special/
-├── index.html              Splash screen → language selection (entry point)
+├── index.html              Three-second splash → storefront (entry point)
 ├── home.html                Product catalog + product detail popup
 ├── cart.html                Cart + checkout (delivery details) form
 ├── admin-login.html         Admin sign-in
@@ -183,13 +183,14 @@ host, overwriting the old one.
 
 ## How data is stored
 
-- **Products** are not stored in the database — they're a static list
-  in `assets/js/products.js` (English + Arabic name, description,
-  price, unit, category, photo path, and a fallback Bootstrap Icon). To add or edit a
-  product, edit that file directly.
+- **Products and sizes** are stored in SQLite. Manage reusable bilingual sizes in
+  **Admin → Sizes**, and assign sizes with their individual prices in **Products**.
+  Catalog seed files are only used when creating the initial database.
 - **Orders** are saved to SQLite the moment a customer confirms
   checkout (`api/create_order.php`), and shown in the admin dashboard
-  via `api/get_orders.php` / `get_order.php`.
+  via `api/get_orders.php` / `get_order.php`. Order numbers start at **999**,
+  then continue with 1000, 1001, and so on. Initialization preserves existing
+  orders and never moves the order sequence backward.
 - **The cart** itself lives only in the customer's browser
   (`localStorage`) until they check out — nothing is sent to the
   server until they press "Confirm order".
@@ -218,9 +219,10 @@ host, overwriting the old one.
 
 ## Language & RTL
 
-- Language choice is asked once on the splash screen and remembered
-  (`localStorage`); it can be changed again anytime from the globe
-  icon in the top bar on the homepage.
+- The entry page shows the existing three-second splash and then opens the store
+  automatically. Arabic is the default, including direct visits to inner pages.
+  The globe switcher still lets customers choose English or Arabic and remembers
+  their preference in `localStorage`. The homepage keeps its loading animation.
 - Arabic renders fully right-to-left: Bootstrap's RTL build is loaded
   automatically, and one font (Cairo) is used for both languages so
   the look stays consistent when switching.
@@ -244,3 +246,70 @@ Open **Admin dashboard → Site content** to edit the storefront in English and 
 Click **Save site content**, then refresh the storefront to see the changes. Image uploads accept JPG, PNG, WebP, and GIF up to 5 MB, subject to PHP's upload limit. Uploading an image updates the draft; click Save to publish it. Both English and Arabic slide titles/button labels are required. The editor warns before leaving with unsaved changes and refuses to overwrite a newer save from another window.
 
 Content is stored in the existing SQLite database in `site_content`. The table is created automatically without replacing existing products, orders, or shipping rates. `api/content-seed.json` supplies the initial copy only; edit published content through the dashboard. Back up `database/store.db` and `assets/img/uploads/` together. The public `GET api/get_content.php` endpoint supplies content; saving and image uploads require an admin session.
+
+
+## Sizes and product prices
+
+Create and edit shared size labels in **Admin → Sizes** (both English and Arabic
+are required). Archive a size to stop assigning it to additional products; products
+already using that size remain available. Restore it to allow new assignments.
+
+In **Products**, add one or more size/price rows using the dropdown. Every row must
+have a different size and a price between 0 and 1,000,000 EGP. Removing a row stops
+selling that product-size combination without altering past orders. A product must
+keep at least one size. Prices belong to the product-size combination, not to the
+shared size itself.
+
+Single-size products support direct Add to cart. Products with several sizes show
+“From” pricing and open a popup to choose a size, including promotional buttons.
+Different sizes appear as separate cart lines. Checkout validates the selected size
+and current price on the server; saved orders retain bilingual size labels and
+prices even after products or shared size labels change. Bundle savings comparisons
+are hidden when multiple sizes make the comparison ambiguous.
+
+Existing products automatically migrate to one size at their existing price, with
+IDs preserved. Old browser carts migrate when there is exactly one available size;
+ambiguous or unavailable items are removed with a notice to select them again.
+
+API additions (admin session required except the public catalog and checkout):
+
+- `GET api/get_sizes.php`: returns all size records, including archived sizes.
+- `POST api/save_size.php`: `{id?: number, label_en: string, label_ar: string}`.
+- `POST api/archive_size.php`: `{id: number, archived: boolean}`.
+- `api/save_product.php`: accepts `variants: [{size_id, price}]` instead of free-text
+  units and one price. The existing multipart photo upload is still supported.
+- `api/get_products.php`: includes `variants` with size IDs, labels, and prices.
+  Compatibility `price` and `unit_en`/`unit_ar` fields describe the lowest-priced size.
+- Checkout items include `{id, size_id, qty, price}`. Legacy requests without a size
+  are accepted only for products with one available size.
+
+## Order status and deletion
+
+Statuses are Pending, Confirmed, Delivered, Completed, and Returned. Shipped is no
+longer accepted; automatic upgrades move legacy Shipped orders to Confirmed. Status
+changes remain available individually, in details, and through bulk updates.
+
+Use **Delete** in an order row to move it to **Deleted orders**, preserving its
+status, customer details, items, and totals. The Deleted view supports filtering,
+viewing, exporting, and restoring. Restore returns the order to Active orders with
+its original status. Deleted orders cannot receive status updates, and a bulk
+update containing a deleted order fails without partially changing other orders.
+
+`GET api/get_orders.php?deleted=0|1` selects Active (default) or Deleted orders.
+Statistics cover that selected view before other filters; exports use the current
+filtered list and include purchased sizes and deletion dates.
+`POST api/delete_order.php` and `POST api/restore_order.php` accept `{id: number}`.
+There is no permanent-delete dashboard action or automatic order-clearing migration.
+
+## Verification
+
+Run backend integration tests against an isolated temporary store:
+
+```sh
+python3 -m unittest discover -s tests -v
+node --test tests/test_storefront.cjs
+```
+
+Back up `database/store.db` before upgrading; migrations run automatically on the
+next API request. The development test-order reset is separate from migrations
+and is not run when installing or upgrading the application.

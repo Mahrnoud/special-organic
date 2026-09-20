@@ -1115,7 +1115,7 @@ body.os-home-loading { overflow: hidden; }
 }
 .status-select-pending { background-color: #E9CE7A; color: #5b4a10; }
 .status-select-confirmed { background-color: var(--os-lime); color: #3c4a12; }
-.status-select-shipped { background-color: #8FBFE0; color: #16425b; }
+.status-select-completed { background-color: #8FBFE0; color: #16425b; }
 .status-select-delivered { background-color: var(--os-leaf); color: #ffffff; }
 .status-select-returned { background-color: #E7B4A6; color: var(--os-danger); }
 
@@ -1151,3 +1151,15 @@ body.os-home-loading { overflow: hidden; }
 .content-editor-section input, .content-editor-section textarea { min-width: 0; }
 .os-hero-desc, .os-about-desc, .os-about-card p, .os-contact [data-i18n="contact_desc"] { white-space: pre-line; overflow-wrap: anywhere; }
 @media (max-width: 575.98px) { .content-editor-section, .content-slide { padding: 1rem; } }
+
+/* Keep size labels and both quantity buttons usable on narrow screens. */
+.cart-line .qty-stepper { flex-shrink: 0; }
+.cart-line-info { min-width: 0; overflow-wrap: anywhere; }
+.product-card-actions { flex-wrap: wrap; }
+@media (max-width: 575.98px) {
+  .cart-line.d-flex { display: grid !important; grid-template-columns: 56px minmax(0, 1fr); }
+  .cart-line .cart-line-icon { grid-column: 1; grid-row: 1; }
+  .cart-line-info { grid-column: 2; grid-row: 1; }
+  .cart-line .qty-stepper { grid-column: 1 / 3; grid-row: 2; justify-self: start; }
+  .cart-line-total { grid-column: 2; grid-row: 2; justify-self: end; }
+}

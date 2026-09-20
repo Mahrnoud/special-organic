@@ -78,3 +78,6 @@ function osLoadImages(root) {
     img.removeAttribute('data-photo-src');
   });
 }
+
+function osVariantLabel(variant) { return osLang() === 'ar' ? variant.label_ar : variant.label_en; }
+function osProductPriceText(product) { return (product.variants.length > 1 ? osT('from_price') + ' ' : '') + osFormatPrice(product.price); }

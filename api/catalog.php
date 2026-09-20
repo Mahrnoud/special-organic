@@ -50,6 +50,13 @@ function product_response(array $product): array
     $product['price'] = (float)$product['price'];
     $product['archived'] = (bool)$product['archived'];
     $product['images'] = json_decode($product['images'], true) ?: [];
+    $product['variants'] = product_variants(get_db(), $product['id']);
+    if ($product['variants']) {
+        $first = $product['variants'][0];
+        $product['price'] = $first['price'];
+        $product['unit_en'] = $first['label_en'];
+        $product['unit_ar'] = $first['label_ar'];
+    }
     return $product;
 }
 
