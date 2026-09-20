@@ -50,7 +50,7 @@ function content_url(string $value, bool $local = false): bool
 {
     if (preg_match('/[\x00-\x20\x7f\\\\]/', $value)) return false;
     if (filter_var($value, FILTER_VALIDATE_URL) && in_array(strtolower((string)parse_url($value, PHP_URL_SCHEME)), ['http', 'https'], true)) return true;
-    return $local && (bool)preg_match('~^(?:#[a-zA-Z][a-zA-Z0-9_-]*|(?:home|cart|index)\.html(?:#[a-zA-Z][a-zA-Z0-9_-]*)?)$~', $value);
+    return $local && (bool)preg_match('~^(?:#[a-zA-Z][a-zA-Z0-9_-]*|(?:/|/?(?:home|cart|index)(?:\.html)?)(?:#[a-zA-Z][a-zA-Z0-9_-]*)?)$~', $value);
 }
 
 function validate_content(array $body, PDO $pdo): array

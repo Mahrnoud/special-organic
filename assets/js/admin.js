@@ -55,7 +55,7 @@ function osEscape(value) {
 
 async function osAdminRequest(url, options = {}) {
   const res = await fetch(url, { credentials: 'same-origin', ...options });
-  if (res.status === 401) { window.location.href = 'admin-login.html'; throw new Error(osT('session_expired')); }
+  if (res.status === 401) { window.location.href = '/admin-login'; throw new Error(osT('session_expired')); }
   const data = await res.json();
   if (!res.ok || !data.success) throw new Error(data.message || osT('request_error'));
   return data;
@@ -209,7 +209,7 @@ syncOrderSelection();
 function openOrderDetails(orderId) {
   fetch('api/get_order.php?id=' + orderId, { credentials: 'same-origin' })
     .then((res) => {
-      if (res.status === 401) { window.location.href = 'admin-login.html'; throw new Error('unauthorized'); }
+      if (res.status === 401) { window.location.href = '/admin-login'; throw new Error('unauthorized'); }
       return res.json();
     })
     .then((data) => {
@@ -349,7 +349,7 @@ document.getElementById('clearFiltersBtn').addEventListener('click', () => {
 document.getElementById('exportExcelBtn').addEventListener('click', exportOrdersToExcel);
 document.getElementById('logoutBtn').addEventListener('click', () => {
   fetch('api/admin_logout.php', { method: 'POST', credentials: 'same-origin' })
-    .finally(() => { window.location.href = 'admin-login.html'; });
+    .finally(() => { window.location.href = '/admin-login'; });
 });
 
 /* Guard: verify the admin session before showing anything. */
@@ -357,7 +357,7 @@ fetch('api/check_session.php', { credentials: 'same-origin' })
   .then((res) => res.json())
   .then((data) => {
     if (!data || !data.logged_in) {
-      window.location.href = 'admin-login.html';
+      window.location.href = '/admin-login';
       return;
     }
     populateCityFilter();
@@ -367,7 +367,7 @@ fetch('api/check_session.php', { credentials: 'same-origin' })
     loadShipping();
     loadContent();
   })
-  .catch(() => { window.location.href = 'admin-login.html'; });
+  .catch(() => { window.location.href = '/admin-login'; });
 
 function orderItemSize(item) { return osLang() === 'ar' ? (item.size_ar || item.size_en || '') : (item.size_en || item.size_ar || ''); }
 async function changeOrderDeletion(id, deleted) {

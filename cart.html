@@ -19,10 +19,10 @@
     <div class="container" data-i18n="announce_bar">Fresh, organic and delivered across Egypt</div>
   </div>
 
-  <!-- Top bar (same as the homepage; section links jump back to home.html) -->
+  <!-- Top bar (same as the homepage; section links jump back to /home) -->
   <nav class="os-topbar navbar sticky-top py-2">
     <div class="container d-flex align-items-center justify-content-between">
-      <a href="home.html#topSection" class="d-flex align-items-center gap-2 text-decoration-none os-brand">
+      <a href="/home#topSection" class="d-flex align-items-center gap-2 text-decoration-none os-brand">
         <img src="assets/img/logo.png" class="os-logo-mark" alt="Special Organic">
         <span class="brand-name-wrap d-none d-sm-flex flex-column">
           <span class="brand-name" data-i18n="app_name">Special Organic</span>
@@ -31,10 +31,10 @@
       </a>
 
       <ul class="os-nav-links d-none d-lg-flex align-items-center mb-0 list-unstyled">
-        <li><a href="home.html#topSection" class="os-nav-link" data-i18n="nav_home_link">Home</a></li>
-        <li><a href="home.html#productsSection" class="os-nav-link" data-i18n="nav_products_link">Products</a></li>
-        <li><a href="home.html#aboutSection" class="os-nav-link" data-i18n="nav_about_link">About</a></li>
-        <li><a href="home.html#contactSection" class="os-nav-link" data-i18n="nav_contact_link">Contact</a></li>
+        <li><a href="/home#topSection" class="os-nav-link" data-i18n="nav_home_link">Home</a></li>
+        <li><a href="/home#productsSection" class="os-nav-link" data-i18n="nav_products_link">Products</a></li>
+        <li><a href="/home#aboutSection" class="os-nav-link" data-i18n="nav_about_link">About</a></li>
+        <li><a href="/home#contactSection" class="os-nav-link" data-i18n="nav_contact_link">Contact</a></li>
       </ul>
 
       <div class="d-flex align-items-center gap-2">
@@ -55,7 +55,7 @@
           </ul>
         </div>
 
-        <a href="cart.html" class="btn btn-forest os-cart-btn rounded-pill px-3">
+        <a href="/cart" class="btn btn-forest os-cart-btn rounded-pill px-3">
           <i class="bi bi-basket3"></i>
           <span data-i18n="nav_cart">Cart</span>
           <span class="os-cart-count" data-cart-count>0</span>
@@ -68,17 +68,17 @@
     </div>
 
     <div class="os-mobile-nav" id="mobileNav">
-      <a href="home.html#topSection" data-i18n="nav_home_link">Home</a>
-      <a href="home.html#productsSection" data-i18n="nav_products_link">Products</a>
-      <a href="home.html#aboutSection" data-i18n="nav_about_link">About</a>
-      <a href="home.html#contactSection" data-i18n="nav_contact_link">Contact</a>
+      <a href="/home#topSection" data-i18n="nav_home_link">Home</a>
+      <a href="/home#productsSection" data-i18n="nav_products_link">Products</a>
+      <a href="/home#aboutSection" data-i18n="nav_about_link">About</a>
+      <a href="/home#contactSection" data-i18n="nav_contact_link">Contact</a>
     </div>
   </nav>
 
   <main class="container py-4 max-w-720">
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
       <h2 class="mb-0" data-i18n="cart_title">Your cart</h2>
-      <a href="home.html" class="btn btn-outline-forest rounded-pill px-3">
+      <a href="/home" class="btn btn-outline-forest rounded-pill px-3">
         <i class="bi bi-arrow-left me-1" id="backArrowIcon"></i>
         <span data-i18n="continue_shopping">Continue shopping</span>
       </a>
@@ -89,7 +89,7 @@
       <i class="bi bi-basket3"></i>
       <h5 class="mt-3" data-i18n="cart_empty_title">Your cart is empty</h5>
       <p data-i18n="cart_empty_sub">Browse our products and add something healthy.</p>
-      <a href="home.html" class="btn btn-forest rounded-pill px-4 mt-2" data-i18n="continue_shopping">Continue shopping</a>
+      <a href="/home" class="btn btn-forest rounded-pill px-4 mt-2" data-i18n="continue_shopping">Continue shopping</a>
     </div>
 
     <!-- Cart + checkout -->
@@ -184,7 +184,7 @@
         <span data-i18n="order_success_id">Order number</span>:
         <span id="successOrderId" class="text-forest"></span>
       </p>
-      <a href="home.html" class="btn btn-forest rounded-pill px-4 mt-2" data-i18n="back_to_home">Back to products</a>
+      <a href="/home" class="btn btn-forest rounded-pill px-4 mt-2" data-i18n="back_to_home">Back to products</a>
     </div>
   </main>
 
@@ -208,11 +208,11 @@
 
         <div class="col-6 col-lg-3">
           <h6 data-i18n="footer_information_heading">Information</h6>
-          <a href="home.html#topSection" data-i18n="footer_link_home">Home</a>
-          <a href="home.html#aboutSection" data-i18n="footer_link_about">About us</a>
-          <a href="home.html#productsSection" data-i18n="footer_link_products">Our products</a>
-          <a href="home.html#contactSection" data-i18n="footer_link_contact">Contact us</a>
-          <a href="admin-login.html" data-i18n="footer_link_admin">Admin login</a>
+          <a href="/home#topSection" data-i18n="footer_link_home">Home</a>
+          <a href="/home#aboutSection" data-i18n="footer_link_about">About us</a>
+          <a href="/home#productsSection" data-i18n="footer_link_products">Our products</a>
+          <a href="/home#contactSection" data-i18n="footer_link_contact">Contact us</a>
+          <a href="/admin-login" data-i18n="footer_link_admin">Admin login</a>
         </div>
 
         <div class="col-6 col-lg-3">
@@ -259,8 +259,8 @@
     (function renderFooterCategories() {
       const wrap = document.getElementById('footerCategories');
       if (!wrap || typeof OS_CATEGORIES === 'undefined') return;
-      const links = OS_CATEGORIES.map((c) => `<a href="home.html#productsSection">${osLang() === 'ar' ? c.ar : c.en}</a>`).join('');
-      wrap.innerHTML = links + `<a href="home.html#productsSection">${osT('footer_cat_bundles')}</a>`;
+      const links = OS_CATEGORIES.map((c) => `<a href="/home#productsSection">${osLang() === 'ar' ? c.ar : c.en}</a>`).join('');
+      wrap.innerHTML = links + `<a href="/home#productsSection">${osT('footer_cat_bundles')}</a>`;
     })();
   </script>
 </body>

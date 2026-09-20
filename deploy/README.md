@@ -138,3 +138,16 @@ before reverting across a migration. Never reset the order sequence after launch
 If the first launch fails, remove only the `special-organic.conf` enabling symlink,
 run `nginx -t` and gracefully reload, then run this project's Compose `stop web`.
 Preserve its shared directories and backups. Existing services stay running.
+
+## Clean page routes
+
+The public page routes are `/home`, `/cart`, `/admin-login`, and `/admin-dashboard`.
+Apache internally serves the corresponding HTML files. This site's Nginx virtual
+host redirects old `.html` links and trailing slashes to the canonical routes;
+`/index.html` and `/index` redirect to `/`. Query strings are retained. The root
+splash screen, API URLs, and asset URLs keep their existing behavior.
+
+When deploying changes to `deploy/nginx.conf`, back up this site's active config,
+install the new file as `/etc/nginx/sites-available/special-organic.conf`, run
+`nginx -t`, and gracefully reload Nginx. Never modify other virtual hosts. Deploy
+the supporting app image before enabling routing rules that depend on it.

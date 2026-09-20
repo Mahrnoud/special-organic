@@ -5,7 +5,7 @@ ARG APP_GID=10001
 RUN php -r 'foreach (["pdo_sqlite", "mbstring", "fileinfo", "Zend OPcache"] as $extension) { if (!extension_loaded($extension)) { fwrite(STDERR, "Missing extension: $extension\n"); exit(1); } }' \
     && groupadd --gid "$APP_GID" app \
     && useradd --uid "$APP_UID" --gid "$APP_GID" --no-create-home app \
-    && a2enmod headers \
+    && a2enmod headers rewrite \
     && sed -i 's/^Listen 80$/Listen 8080/' /etc/apache2/ports.conf \
     && cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 COPY deploy/apache.conf /etc/apache2/sites-available/000-default.conf

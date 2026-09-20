@@ -21,7 +21,7 @@ document.getElementById('adminLoginForm').addEventListener('submit', function (e
     .then((res) => res.json())
     .then((data) => {
       if (data && data.success) {
-        window.location.href = 'admin-dashboard.html';
+        window.location.href = '/admin-dashboard';
       } else {
         errorBox.textContent = (data && data.message) || osT('login_error');
         errorBox.classList.remove('d-none');

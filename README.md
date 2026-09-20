@@ -140,7 +140,7 @@ automatically on the next API request, without replacing historical orders.
 From the project folder:
 
 ```
-php -S localhost:8000
+php -S localhost:8000 tools/router.php
 ```
 
 Then open `http://localhost:8000` in your browser. The built-in PHP
@@ -313,3 +313,11 @@ node --test tests/test_storefront.cjs
 Back up `database/store.db` before upgrading; migrations run automatically on the
 next API request. The development test-order reset is separate from migrations
 and is not run when installing or upgrading the application.
+
+## Clean page URLs
+
+Public pages use `/home`, `/cart`, `/admin-login`, and `/admin-dashboard`.
+The root `/` keeps the splash screen and then opens `/home`. Production redirects
+legacy `.html` links and trailing-slash page URLs permanently to the clean URL,
+preserving query strings and browser fragments. API and asset paths are unchanged.
+Use the local router in the development command above to support the same routes.

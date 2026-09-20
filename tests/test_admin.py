@@ -151,6 +151,29 @@ class AdminIntegrationTests(unittest.TestCase):
         self.assertEqual(current['revision'], saved['revision'])
         self.assertEqual(self.request('save_content.php', {'content': original['content'], 'revision': saved['revision']})[0], 200)
 
+    def test_content_links_accept_clean_and_legacy_pages(self):
+        import copy
+        _, original = self.request('get_content.php')
+        current = original
+        try:
+            for link in ['/home', '/home#productsSection', '/cart', '/', 'cart',
+                         'home.html#productsSection', '/cart.html']:
+                content = copy.deepcopy(original['content'])
+                content['slides'][0]['href'] = link
+                code, current = self.request('save_content.php', {
+                    'content': content, 'revision': current['revision']})
+                self.assertEqual(code, 200, (link, current))
+                self.assertEqual(current['content']['slides'][0]['href'], link)
+            for link in ['//example.com', '/database/store.db', '/home/../../tools', '/admin-dashboard']:
+                content = copy.deepcopy(original['content'])
+                content['slides'][0]['href'] = link
+                self.assertEqual(self.request('save_content.php', {
+                    'content': content, 'revision': current['revision']})[0], 422, link)
+        finally:
+            _, latest = self.request('get_content.php')
+            self.request('save_content.php', {
+                'content': original['content'], 'revision': latest['revision']})
+
     def test_content_image_upload(self):
         self.assertEqual(self.request('upload_content_image.php', {}, anonymous=True)[0], 401)
         self.assertEqual(self.request('upload_content_image.php', {})[0], 422)
