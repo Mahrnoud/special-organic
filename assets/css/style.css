@@ -683,7 +683,7 @@ body.os-home-loading { overflow: hidden; }
   transform: translateY(-2px);
 }
 .product-card .product-media {
-  background: var(--os-sand);
+  background: var(--os-white);
   border-radius: var(--os-radius-tile) var(--os-radius-tile) 0 0;
   display: flex;
   align-items: center;
@@ -694,7 +694,7 @@ body.os-home-loading { overflow: hidden; }
   overflow: hidden;
 }
 .product-card .product-media .os-photo img {
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
 }
 .product-card .product-media .bi {
@@ -776,7 +776,7 @@ body.os-home-loading { overflow: hidden; }
   overflow: hidden;
 }
 .product-modal-icon .os-photo img {
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
 }
 .product-modal-icon .bi { font-size: 4rem; color: var(--os-forest); }
