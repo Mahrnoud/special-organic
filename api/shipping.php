@@ -16,10 +16,38 @@ function initialize_shipping(PDO $pdo): void
     foreach (shipping_cities() as $city) $insert->execute([$city['en']]);
 }
 
+/** Add stable location identifiers and normalize every recognizable legacy order. */
+function initialize_order_locations(PDO $pdo): void
+{
+    $migration = 'order-location-codes-v1';
+    $pdo->exec('CREATE TABLE IF NOT EXISTS schema_migrations (name TEXT PRIMARY KEY)');
+    if ($pdo->query("SELECT 1 FROM schema_migrations WHERE name = '$migration'")->fetchColumn()) return;
+
+    $pdo->exec('BEGIN IMMEDIATE');
+    try {
+        if (!$pdo->query("SELECT 1 FROM schema_migrations WHERE name = '$migration'")->fetchColumn()) {
+            $columns = array_column($pdo->query('PRAGMA table_info(orders)')->fetchAll(PDO::FETCH_ASSOC), 'name');
+            if (!in_array('city_code', $columns, true)) $pdo->exec('ALTER TABLE orders ADD COLUMN city_code TEXT');
+            if (!in_array('country_code', $columns, true)) $pdo->exec("ALTER TABLE orders ADD COLUMN country_code TEXT NOT NULL DEFAULT 'EG'");
+
+            $update = $pdo->prepare("UPDATE orders SET city_code = ?, country_code = 'EG' WHERE id = ?");
+            foreach ($pdo->query('SELECT id, city, city_code FROM orders')->fetchAll(PDO::FETCH_ASSOC) as $order) {
+                $city = shipping_city((string)($order['city_code'] ?: $order['city']));
+                if ($city) $update->execute([$city['code'], $order['id']]);
+            }
+            $pdo->prepare('INSERT INTO schema_migrations(name) VALUES (?)')->execute([$migration]);
+        }
+        $pdo->exec('COMMIT');
+    } catch (Throwable $e) {
+        $pdo->exec('ROLLBACK');
+        throw $e;
+    }
+}
+
 function shipping_city(string $name): ?array
 {
     foreach (shipping_cities() as $city) {
-        if ($name === $city['en'] || $name === $city['ar']) return $city;
+        if ($name === $city['code'] || $name === $city['en'] || $name === $city['ar']) return $city;
     }
     return null;
 }

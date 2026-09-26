@@ -285,9 +285,14 @@ API additions (admin session required except the public catalog and checkout):
 
 ## Order status and deletion
 
-Statuses are Pending, Confirmed, Delivered, Completed, and Returned. Shipped is no
-longer accepted; automatic upgrades move legacy Shipped orders to Confirmed. Status
+Statuses are Pending, Confirmed, Shipped, Delivered, Completed, and Returned. Status
 changes remain available individually, in details, and through bulk updates.
+
+Orders store stable city and country codes, while the dashboard translates location,
+status, product, and size snapshots into the admin's selected language. The same
+language is used by Excel exports. Customer-entered names, addresses, and phone
+numbers are preserved exactly as submitted. Legacy English and Arabic city values are
+normalized automatically during upgrades and remain accepted by checkout clients.
 
 Use **Delete** in an order row to move it to **Deleted orders**, preserving its
 status, customer details, items, and totals. The Deleted view supports filtering,

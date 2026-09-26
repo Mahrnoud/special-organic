@@ -71,8 +71,9 @@ test('Excel rows retain purchased size snapshots and the selected deleted view',
   const start = source.indexOf('function exportOrdersToExcel()');
   const end = source.indexOf("\ndocument.getElementById('orderView')",start);
   const c = vm.createContext({
-    osLastOrders:[{id:7,full_name:'Test',city:'Cairo',country:'Egypt',items:[{name:'Tea & seeds',size_en:'250g pack',qty:2}],total_amount:125,shipping_fee:25,status:'completed',created_at:'2026-09-20 10:00:00',deleted_at:'2026-09-20 11:00:00'}],
-    osT:k=>k, orderItemSize:item=>item.size_en, formatDate:value=>value,
+    osLastOrders:[{id:7,full_name:'Test',city:'Cairo',city_code:'cairo',country:'Egypt',country_code:'EG',items:[{name:'Tea & seeds',name_en:'Tea & seeds',name_ar:'شاي وبذور',size_en:'250g pack',qty:2}],total_amount:125,shipping_fee:25,status:'completed',created_at:'2026-09-20 10:00:00',deleted_at:'2026-09-20 11:00:00'}],
+    osLang:()=> 'en', osT:k=>k, orderCity:()=> 'Cairo', orderCountry:()=> 'Egypt', orderItemName:item=>item.name_en,
+    orderItemSize:item=>item.size_en, formatDate:value=>value,
     document:{getElementById:()=>({value:'1'})},
     XLSX:{utils:{aoa_to_sheet:data=>{rows=data;return {};},book_new:()=>({}),book_append_sheet(){}},writeFile:(_book,name)=>{filename=name;}},
   });
@@ -84,4 +85,32 @@ test('Excel rows retain purchased size snapshots and the selected deleted view',
   assert.equal(rows[1][11],'status_completed');
   assert.equal(rows[1][13],'2026-09-20 11:00:00');
   assert.match(filename,/deleted-orders/);
+});
+
+test('admin order helpers localize canonical locations and bilingual snapshots', () => {
+  const source = read('assets/js/admin.js');
+  const start = source.indexOf('function orderCity(');
+  const end = source.indexOf('\nfunction populateCityFilter', start);
+  let lang = 'en';
+  const c = vm.createContext({
+    OS_EGYPT_CITIES: [{code:'cairo', en:'Cairo', ar:'القاهرة'}],
+    osLang: () => lang,
+    osT: key => key === 'egypt' ? (lang === 'ar' ? 'مصر' : 'Egypt') : key,
+  });
+  vm.runInContext(source.slice(start, end), c);
+  const order = {city_code:'cairo', city:'Cairo', country_code:'EG', country:'Egypt'};
+  const item = {name:'legacy', name_en:'Tea', name_ar:'شاي'};
+  assert.equal(vm.runInContext('orderCity', c)(order), 'Cairo');
+  assert.equal(vm.runInContext('orderCountry', c)(order), 'Egypt');
+  assert.equal(vm.runInContext('orderItemName', c)(item), 'Tea');
+  lang = 'ar';
+  assert.equal(vm.runInContext('orderCity', c)(order), 'القاهرة');
+  assert.equal(vm.runInContext('orderCountry', c)(order), 'مصر');
+  assert.equal(vm.runInContext('orderItemName', c)(item), 'شاي');
+  assert.equal(vm.runInContext('orderItemName', c)({name:'Original only'}), 'Original only');
+});
+
+test('Shipped is ordered between Confirmed and Delivered', () => {
+  const source = read('assets/js/admin.js');
+  assert.match(source, /\['pending', 'confirmed', 'shipped', 'delivered', 'completed', 'returned'\]/);
 });

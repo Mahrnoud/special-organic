@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_response(['success' => false, 'message' => 'Method not allowed.'], 405);
 }
 
-$allowedStatuses = ['pending', 'confirmed', 'delivered', 'completed', 'returned'];
+$allowedStatuses = ['pending', 'confirmed', 'shipped', 'delivered', 'completed', 'returned'];
 
 $body = read_json_body();
 $ids = $body['ids'] ?? [$body['id'] ?? null];

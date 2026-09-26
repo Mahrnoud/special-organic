@@ -38,7 +38,9 @@ function get_db(): PDO
             id                 INTEGER PRIMARY KEY AUTOINCREMENT,
             full_name          TEXT NOT NULL,
             city               TEXT NOT NULL,
+            city_code          TEXT,
             country            TEXT NOT NULL DEFAULT 'Egypt',
+            country_code       TEXT NOT NULL DEFAULT 'EG',
             address            TEXT NOT NULL DEFAULT '',
             mobile_whatsapp    TEXT NOT NULL,
             mobile_additional  TEXT,
@@ -84,6 +86,7 @@ function get_db(): PDO
 
     require_once __DIR__ . '/shipping.php';
     initialize_shipping($pdo);
+    initialize_order_locations($pdo);
 
     require_once __DIR__ . '/content.php';
     initialize_content($pdo);

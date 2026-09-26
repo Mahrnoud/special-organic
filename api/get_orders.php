@@ -7,15 +7,22 @@ require_admin();
 
 $pdo = get_db();
 
-$country = trim((string)($_GET['country'] ?? ''));
-$city = trim((string)($_GET['city'] ?? ''));
+$countryInput = trim((string)($_GET['country_code'] ?? $_GET['country'] ?? ''));
+$cityInput = trim((string)($_GET['city_code'] ?? $_GET['city'] ?? ''));
 $status = trim((string)($_GET['status'] ?? ''));
 $dateFrom = trim((string)($_GET['date_from'] ?? ''));
 $dateTo = trim((string)($_GET['date_to'] ?? ''));
 $q = trim((string)($_GET['q'] ?? ''));
 
-$allowedStatuses = ['pending', 'confirmed', 'delivered', 'completed', 'returned'];
+$allowedStatuses = ['pending', 'confirmed', 'shipped', 'delivered', 'completed', 'returned'];
 if ($status !== '' && !in_array($status, $allowedStatuses, true)) json_response(['success' => false, 'message' => 'Invalid status.'], 422);
+$countryCode = '';
+if ($countryInput !== '') {
+    if (!in_array($countryInput, ['EG', 'Egypt', 'مصر'], true)) json_response(['success' => false, 'message' => 'Invalid country.'], 422);
+    $countryCode = 'EG';
+}
+$filterCity = $cityInput === '' ? null : shipping_city($cityInput);
+if ($cityInput !== '' && !$filterCity) json_response(['success' => false, 'message' => 'Invalid city.'], 422);
 $dateRegex = '/^\d{4}-\d{2}-\d{2}$/';
 
 $deleted = (string)($_GET['deleted'] ?? '0');
@@ -24,13 +31,15 @@ $visibility = $deleted === '1' ? 'deleted_at IS NOT NULL' : 'deleted_at IS NULL'
 $where = [$visibility];
 $params = [];
 
-if ($country !== '') {
-    $where[] = 'country = :country';
-    $params[':country'] = $country;
+if ($countryCode !== '') {
+    $where[] = "(country_code = :country_code OR (country_code IS NULL AND country IN ('Egypt', 'مصر', 'EG')))";
+    $params[':country_code'] = $countryCode;
 }
-if ($city !== '') {
-    $where[] = 'city = :city';
-    $params[':city'] = $city;
+if ($filterCity) {
+    $where[] = '(city_code = :city_code OR (city_code IS NULL AND city IN (:city_en, :city_ar)))';
+    $params[':city_code'] = $filterCity['code'];
+    $params[':city_en'] = $filterCity['en'];
+    $params[':city_ar'] = $filterCity['ar'];
 }
 if ($status !== '' && in_array($status, $allowedStatuses, true)) {
     $where[] = 'status = :status';
@@ -56,7 +65,7 @@ $whereSql = count($where) > 0 ? ('WHERE ' . implode(' AND ', $where)) : '';
 // Includes mobile_additional + items so the admin dashboard can build a
 // full Excel export without an extra request per order.
 $stmt = $pdo->prepare("
-    SELECT id, full_name, city, country, address, mobile_whatsapp, mobile_additional, items, total_amount, shipping_fee, status, created_at, deleted_at
+    SELECT id, full_name, city, city_code, country, country_code, address, mobile_whatsapp, mobile_additional, items, total_amount, shipping_fee, status, created_at, deleted_at
     FROM orders
     $whereSql
     ORDER BY created_at DESC, id DESC
@@ -75,6 +84,7 @@ $stats = $pdo->query("
         COUNT(*) AS total,
         SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending,
         SUM(CASE WHEN status = 'confirmed' THEN 1 ELSE 0 END) AS confirmed,
+        SUM(CASE WHEN status = 'shipped' THEN 1 ELSE 0 END) AS shipped,
         SUM(CASE WHEN status = 'delivered' THEN 1 ELSE 0 END) AS delivered,
         SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed,
         SUM(CASE WHEN status = 'returned' THEN 1 ELSE 0 END) AS returned
@@ -88,6 +98,7 @@ json_response([
         'total' => (int)($stats['total'] ?? 0),
         'pending' => (int)($stats['pending'] ?? 0),
         'confirmed' => (int)($stats['confirmed'] ?? 0),
+        'shipped' => (int)($stats['shipped'] ?? 0),
         'delivered' => (int)($stats['delivered'] ?? 0),
         'completed' => (int)($stats['completed'] ?? 0),
         'returned' => (int)($stats['returned'] ?? 0),

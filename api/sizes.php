@@ -33,7 +33,6 @@ function initialize_store_updates(PDO $pdo): void
             }
             $columns = array_column($pdo->query('PRAGMA table_info(orders)')->fetchAll(PDO::FETCH_ASSOC), 'name');
             if (!in_array('deleted_at', $columns, true)) $pdo->exec('ALTER TABLE orders ADD COLUMN deleted_at TEXT DEFAULT NULL');
-            $pdo->exec("UPDATE orders SET status = 'confirmed' WHERE status = 'shipped'");
             $pdo->exec("INSERT INTO schema_migrations(name) VALUES ('sizes-and-deleted-orders-v1')");
         }
         $pdo->exec('COMMIT');

@@ -10,9 +10,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $body = read_json_body();
 
 $fullName = trim((string)($body['full_name'] ?? ''));
-$city = trim((string)($body['city'] ?? ''));
+$city = trim((string)($body['city_code'] ?? $body['city'] ?? ''));
 $address = trim((string)($body['address'] ?? ''));
-$country = trim((string)($body['country'] ?? 'Egypt')) ?: 'Egypt';
 $mobileWhatsapp = trim((string)($body['mobile_whatsapp'] ?? ''));
 $mobileAdditional = isset($body['mobile_additional']) && $body['mobile_additional'] !== null
     ? trim((string)$body['mobile_additional'])
@@ -94,19 +93,22 @@ foreach ($items as $item) {
         json_response(['success' => false, 'message' => 'A product price has changed. Refresh your cart to review the new total.'], 409);
     }
     $recomputedTotal += $qty * $price;
-    $cleanItems[] = ['id' => $id, 'name' => $product['name_' . $lang], 'qty' => $qty, 'price' => $price,
+    $cleanItems[] = ['id' => $id, 'name' => $product['name_' . $lang],
+        'name_en' => $product['name_en'], 'name_ar' => $product['name_ar'], 'qty' => $qty, 'price' => $price,
         'size_id' => $sizeId, 'size_en' => $variant['label_en'], 'size_ar' => $variant['label_ar']];
 }
 
 $stmt = $pdo->prepare('
-    INSERT INTO orders (full_name, city, country, address, mobile_whatsapp, mobile_additional, items, total_amount, shipping_fee, status)
-    VALUES (:full_name, :city, :country, :address, :mobile_whatsapp, :mobile_additional, :items, :total_amount, :shipping_fee, :status)
+    INSERT INTO orders (full_name, city, city_code, country, country_code, address, mobile_whatsapp, mobile_additional, items, total_amount, shipping_fee, status)
+    VALUES (:full_name, :city, :city_code, :country, :country_code, :address, :mobile_whatsapp, :mobile_additional, :items, :total_amount, :shipping_fee, :status)
 ');
 $stmt->execute([
     ':full_name' => $fullName,
-    ':city' => $city,
+    ':city' => $deliveryCity['en'],
+    ':city_code' => $deliveryCity['code'],
     ':address' => $address,
-    ':country' => $country,
+    ':country' => 'Egypt',
+    ':country_code' => 'EG',
     ':mobile_whatsapp' => $mobileWhatsapp,
     ':mobile_additional' => ($mobileAdditional !== '' ? $mobileAdditional : null),
     ':items' => json_encode($cleanItems, JSON_UNESCAPED_UNICODE),

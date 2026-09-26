@@ -1,6 +1,6 @@
 /* Organic Special — admin dashboard logic */
 
-const OS_ORDER_STATUSES = ['pending', 'confirmed', 'delivered', 'completed', 'returned'];
+const OS_ORDER_STATUSES = ['pending', 'confirmed', 'shipped', 'delivered', 'completed', 'returned'];
 
 /* Orders currently loaded in the table (already filtered by whatever the
    admin has selected). Kept around so Export can reuse the same data
@@ -23,11 +23,25 @@ function formatDate(isoString) {
   });
 }
 
+function orderCity(order) {
+  const city = OS_EGYPT_CITIES.find((entry) => entry.code === order.city_code)
+    || OS_EGYPT_CITIES.find((entry) => entry.en === order.city || entry.ar === order.city);
+  return city ? city[osLang()] : order.city;
+}
+
+function orderCountry(order) {
+  return order.country_code === 'EG' || ['Egypt', 'مصر', 'EG'].includes(order.country) ? osT('egypt') : order.country;
+}
+
+function orderItemName(item) {
+  return (osLang() === 'ar' ? item.name_ar : item.name_en) || item.name || item.name_en || item.name_ar || '';
+}
+
 function populateCityFilter() {
   const select = document.getElementById('filterCity');
   OS_EGYPT_CITIES.forEach((c) => {
     const opt = document.createElement('option');
-    opt.value = osLang() === 'ar' ? c.ar : c.en;
+    opt.value = c.code;
     opt.textContent = osLang() === 'ar' ? c.ar : c.en;
     select.appendChild(opt);
   });
@@ -36,8 +50,8 @@ function populateCityFilter() {
 function currentFilters() {
   return {
     deleted: document.getElementById('orderView').value,
-    country: document.getElementById('filterCountry').value,
-    city: document.getElementById('filterCity').value,
+    country_code: document.getElementById('filterCountry').value,
+    city_code: document.getElementById('filterCity').value,
     status: document.getElementById('filterStatus').value,
     date_from: document.getElementById('filterDateFrom').value,
     date_to: document.getElementById('filterDateTo').value,
@@ -142,7 +156,7 @@ async function loadOrders() {
     tbody.innerHTML = osLastOrders.map((o) => `
       <tr data-id="${o.id}">
         <td class="order-checkbox-cell"><input ${o.deleted_at ? 'hidden' : ''} type="checkbox" class="form-check-input order-selector" data-id="${o.id}" aria-label="${osEscape(osT('select_order'))} #${o.id}"></td>
-        <td>#${o.id}</td><td>${osEscape(o.full_name)}</td><td>${osEscape(o.city)}</td>
+        <td>#${o.id}</td><td>${osEscape(o.full_name)}</td><td>${osEscape(orderCity(o))}</td>
         <td>${osEscape(o.mobile_whatsapp)}</td><td>${osFormatPrice(o.total_amount)}</td>
         <td>${statusSelectHtml(o.id, o.status, !!o.deleted_at)}</td><td>${osEscape(formatDate(o.created_at))}${o.deleted_at ? `<div class="small text-muted-soft">${osT('deleted_on')}: ${osEscape(formatDate(o.deleted_at))}</div>` : ''}</td>
         <td><div class="d-flex gap-2"><button class="btn btn-sm btn-outline-forest view-order-btn" data-id="${o.id}">${osT('view')}</button><button class="btn btn-sm ${o.deleted_at ? 'btn-outline-forest restore-order-btn' : 'btn-outline-danger delete-order-btn'}" data-id="${o.id}">${osT(o.deleted_at ? 'restore_order' : 'delete_order')}</button></div></td>
@@ -218,7 +232,7 @@ function openOrderDetails(orderId) {
       document.getElementById('detailsOrderId').textContent = '#' + o.id;
       document.getElementById('detailsName').textContent = o.full_name;
       document.getElementById('detailsDate').textContent = formatDate(o.created_at);
-      document.getElementById('detailsCity').textContent = `${o.city}, ${o.country}`;
+      document.getElementById('detailsCity').textContent = `${orderCity(o)}, ${orderCountry(o)}`;
       document.getElementById('detailsMobile').textContent = o.mobile_whatsapp;
       document.getElementById('detailsMobileAlt').textContent = o.mobile_additional || '—';
       document.getElementById('detailsTotal').textContent = osFormatPrice(o.total_amount);
@@ -243,7 +257,7 @@ function openOrderDetails(orderId) {
       list.innerHTML = o.items
         .map(
           (it) => `<li class="list-group-item d-flex justify-content-between">
-            <span>${osEscape(it.name)}${orderItemSize(it) ? ' — ' + osEscape(orderItemSize(it)) : ''} × ${osEscape(it.qty)}</span>
+            <span>${osEscape(orderItemName(it))}${orderItemSize(it) ? ' — ' + osEscape(orderItemSize(it)) : ''} × ${osEscape(it.qty)}</span>
             <span class="fw-bold">${osFormatPrice(it.price * it.qty)}</span>
           </li>`
         )
@@ -281,12 +295,12 @@ function exportOrdersToExcel() {
   const rows = osLastOrders.map((o) => [
     o.id,
     o.full_name,
-    o.city,
-    o.country,
+    orderCity(o),
+    orderCountry(o),
     o.address || '',
     o.mobile_whatsapp,
     o.mobile_additional || '',
-    (o.items || []).map((it) => `${it.name}${orderItemSize(it) ? ' — ' + orderItemSize(it) : ''} × ${it.qty}`).join(', '),
+    (o.items || []).map((it) => `${orderItemName(it)}${orderItemSize(it) ? ' — ' + orderItemSize(it) : ''} × ${it.qty}`).join(', '),
     Number(o.total_amount) - Number(o.shipping_fee || 0),
     Number(o.shipping_fee || 0),
     Number(o.total_amount),
@@ -296,6 +310,7 @@ function exportOrdersToExcel() {
   ]);
 
   const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  if (osLang() === 'ar') ws['!views'] = [{ RTL: true }];
 
   ws['!cols'] = [
     { wch: 9 },  // Order #
@@ -347,6 +362,12 @@ document.getElementById('clearFiltersBtn').addEventListener('click', () => {
   loadOrders();
 });
 document.getElementById('exportExcelBtn').addEventListener('click', exportOrdersToExcel);
+const adminLanguage = document.getElementById('adminLanguage');
+adminLanguage.value = osLang();
+adminLanguage.addEventListener('change', () => {
+  osSetLang(adminLanguage.value);
+  window.location.reload();
+});
 document.getElementById('logoutBtn').addEventListener('click', () => {
   fetch('api/admin_logout.php', { method: 'POST', credentials: 'same-origin' })
     .finally(() => { window.location.href = '/admin-login'; });

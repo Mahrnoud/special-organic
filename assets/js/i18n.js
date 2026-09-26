@@ -608,7 +608,7 @@ Object.assign(OS_DICT.en, {
   size_saved: 'Size saved.', size_archived: 'Size archived.', size_restored: 'Size restored.', archive_size: 'Archive', restore_size: 'Restore',
   sizes_prices: 'Sizes and prices', choose_size: 'Choose a size', size_required: 'Choose at least one size and enter its price.', duplicate_size: 'Each size can only appear once.',
   size_load_error: 'Could not load sizes. Close this window and try again.', from_price: 'From', multiple_sizes: 'Available in multiple sizes',
-  completed_orders: 'Completed', status_completed: 'Completed', active_orders: 'Active orders', deleted_orders: 'Deleted orders',
+  shipped_orders: 'Shipped', status_shipped: 'Shipped', completed_orders: 'Completed', status_completed: 'Completed', active_orders: 'Active orders', deleted_orders: 'Deleted orders',
   delete_order: 'Delete', restore_order: 'Restore', delete_order_confirm: 'Move order #{id} to Deleted orders? You can restore it later.',
   order_deleted: 'Order moved to Deleted orders.', order_restored: 'Order restored.', deleted_on: 'Deleted on',
   cart_size_removed: 'Some cart items are no longer available or need a size selection. Please select those products and sizes again.'
@@ -619,7 +619,7 @@ Object.assign(OS_DICT.ar, {
   size_saved: 'تم حفظ الحجم.', size_archived: 'تمت أرشفة الحجم.', size_restored: 'تمت استعادة الحجم.', archive_size: 'أرشفة', restore_size: 'استعادة',
   sizes_prices: 'الأحجام والأسعار', choose_size: 'اختر الحجم', size_required: 'اختر حجماً واحداً على الأقل وأدخل سعره.', duplicate_size: 'لا يمكن تكرار نفس الحجم.',
   size_load_error: 'تعذر تحميل الأحجام. أغلق النافذة وحاول مجدداً.', from_price: 'يبدأ من', multiple_sizes: 'متوفر بأحجام متعددة',
-  completed_orders: 'مكتمل', status_completed: 'مكتمل', active_orders: 'الطلبات النشطة', deleted_orders: 'الطلبات المحذوفة',
+  shipped_orders: 'تم الشحن', status_shipped: 'تم الشحن', completed_orders: 'مكتمل', status_completed: 'مكتمل', active_orders: 'الطلبات النشطة', deleted_orders: 'الطلبات المحذوفة',
   delete_order: 'حذف', restore_order: 'استعادة', delete_order_confirm: 'نقل الطلب #{id} إلى الطلبات المحذوفة؟ يمكنك استعادته لاحقاً.',
   order_deleted: 'تم نقل الطلب إلى الطلبات المحذوفة.', order_restored: 'تمت استعادة الطلب.', deleted_on: 'تاريخ الحذف',
   cart_size_removed: 'بعض عناصر السلة لم تعد متاحة أو تحتاج لاختيار حجم. يرجى اختيار هذه المنتجات والأحجام مجدداً.'

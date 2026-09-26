@@ -8,7 +8,7 @@ let osShippingLoaded = false;
 function osCartShipping() {
   if (!osCartLinesWithDetails().length) return 0;
   const city = document.getElementById('citySelect').value;
-  return osShippingLoaded ? osShippingRates.find((rate) => rate.en === city)?.fee ?? null : null;
+  return osShippingLoaded ? osShippingRates.find((rate) => rate.code === city)?.fee ?? null : null;
 }
 
 function osCartGrandTotal() {
@@ -31,7 +31,7 @@ async function loadCheckoutShipping() {
     const response = await fetch('api/get_shipping.php', { cache: 'no-store' });
     const data = await response.json();
     if (!response.ok || !data.success || !Array.isArray(data.rates) ||
-        !OS_EGYPT_CITIES.every((city) => data.rates.some((rate) => rate.en === city.en && Number.isFinite(rate.fee) && rate.fee >= 0))) {
+        !OS_EGYPT_CITIES.every((city) => data.rates.some((rate) => rate.code === city.code && Number.isFinite(rate.fee) && rate.fee >= 0))) {
       throw new Error('Invalid shipping rates');
     }
     osShippingRates = data.rates;
@@ -47,7 +47,7 @@ function renderCityOptions() {
   const select = document.getElementById('citySelect');
   OS_EGYPT_CITIES.forEach((c) => {
     const opt = document.createElement('option');
-    opt.value = c.en;
+    opt.value = c.code;
     opt.textContent = osLang() === 'ar' ? c.ar : c.en;
     select.appendChild(opt);
   });
@@ -180,8 +180,7 @@ document.getElementById('checkoutForm').addEventListener('submit', function (e) 
   const payload = {
     language: osLang(),
     full_name: fullName,
-    city: osLang() === 'ar' ? OS_EGYPT_CITIES.find((entry) => entry.en === city).ar : city,
-    country: 'Egypt',
+    city_code: city,
     address: address,
     mobile_whatsapp: mobileWhatsapp,
     mobile_additional: mobileAdditional || null,

@@ -20,10 +20,17 @@
         <img src="assets/img/logo.png" class="os-logo-mark" alt="Organic Special">
         <span class="brand-name" data-i18n="admin_title">Admin dashboard</span>
       </div>
-      <button type="button" class="btn btn-outline-light btn-sm rounded-pill px-3" id="logoutBtn">
-        <i class="bi bi-box-arrow-right me-1"></i>
-        <span data-i18n="logout">Log out</span>
-      </button>
+      <div class="d-flex align-items-center gap-2">
+        <label for="adminLanguage" class="visually-hidden" data-i18n="choose_language">Choose your language</label>
+        <select id="adminLanguage" class="form-select form-select-sm admin-language-select" aria-label="Choose your language">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+        </select>
+        <button type="button" class="btn btn-outline-light btn-sm rounded-pill px-3" id="logoutBtn">
+          <i class="bi bi-box-arrow-right me-1"></i>
+          <span data-i18n="logout">Log out</span>
+        </button>
+      </div>
     </div>
   </nav>
 
@@ -39,42 +46,34 @@
     <section id="ordersPanel" aria-labelledby="ordersTab">
     <div class="mb-3"><label for="orderView" class="visually-hidden" data-i18n="dashboard_title">Orders</label><select id="orderView" class="form-select w-auto"><option value="0" data-i18n="active_orders">Active orders</option><option value="1" data-i18n="deleted_orders">Deleted orders</option></select></div>
     <!-- Stat tiles -->
-    <div class="row g-3 mb-4">
-      <div class="col-6 col-md-2">
-        <div class="stat-tile">
+    <div class="order-stats-grid mb-4">
+      <div class="stat-tile">
           <div class="stat-value" id="statTotal">0</div>
           <div class="stat-label" data-i18n="total_orders">Total orders</div>
-        </div>
       </div>
-      <div class="col-6 col-md-2">
-        <div class="stat-tile">
+      <div class="stat-tile">
           <div class="stat-value" id="statPending">0</div>
           <div class="stat-label" data-i18n="pending_orders">Pending</div>
-        </div>
       </div>
-      <div class="col-6 col-md-2">
-        <div class="stat-tile">
+      <div class="stat-tile">
           <div class="stat-value" id="statConfirmed">0</div>
           <div class="stat-label" data-i18n="confirmed_orders">Confirmed</div>
-        </div>
       </div>
-      <div class="col-6 col-md-2">
-        <div class="stat-tile">
+      <div class="stat-tile">
+          <div class="stat-value" id="statShipped">0</div>
+          <div class="stat-label" data-i18n="shipped_orders">Shipped</div>
+      </div>
+      <div class="stat-tile">
           <div class="stat-value" id="statDelivered">0</div>
           <div class="stat-label" data-i18n="delivered_orders">Delivered</div>
-        </div>
       </div>
-      <div class="col-6 col-md-2">
-        <div class="stat-tile">
+      <div class="stat-tile">
           <div class="stat-value" id="statCompleted">0</div>
           <div class="stat-label" data-i18n="completed_orders">Completed</div>
-        </div>
       </div>
-      <div class="col-6 col-md-2">
-        <div class="stat-tile">
+      <div class="stat-tile">
           <div class="stat-value" id="statReturned">0</div>
           <div class="stat-label" data-i18n="returned_orders">Returned</div>
-        </div>
       </div>
     </div>
 
@@ -84,7 +83,7 @@
         <label class="form-label small" data-i18n="filter_country">Country</label>
         <select class="form-select" id="filterCountry">
           <option value="" data-i18n="all_categories">All</option>
-          <option value="Egypt" data-i18n="egypt">Egypt</option>
+          <option value="EG" data-i18n="egypt">Egypt</option>
         </select>
       </div>
       <div class="col-6 col-md-2">
@@ -99,6 +98,7 @@
           <option value="" data-i18n="all_statuses">All statuses</option>
           <option value="pending" data-i18n="status_pending">Pending</option>
           <option value="confirmed" data-i18n="status_confirmed">Confirmed</option>
+          <option value="shipped" data-i18n="status_shipped">Shipped</option>
           <option value="delivered" data-i18n="status_delivered">Delivered</option>
           <option value="completed" data-i18n="status_completed">Completed</option>
           <option value="returned" data-i18n="status_returned">Returned</option>

@@ -35,6 +35,8 @@ class AdminIntegrationTests(unittest.TestCase):
                 total_amount REAL, status TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)''')
             db.execute('''INSERT INTO orders (full_name, city, country, mobile_whatsapp, items, total_amount, status)
                 VALUES ('Historical customer', 'Cairo', 'Egypt', '01000000000', '[{"id":1,"name":"Original name","qty":1,"price":42}]', 42, 'shipped')''')
+            db.execute('''INSERT INTO orders (full_name, city, country, mobile_whatsapp, items, total_amount, status)
+                VALUES ('عميل سابق', 'الجيزة', 'مصر', '01000000001', '[{"id":1,"name":"اسم قديم","qty":1,"price":42}]', 42, 'pending')''')
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', 0))
             port = sock.getsockname()[1]
@@ -93,8 +95,14 @@ class AdminIntegrationTests(unittest.TestCase):
         self.assertEqual(data['order']['items'][0]['name'], 'Original name')
         self.assertEqual(data['order']['total_amount'], 42)
         self.assertEqual(data['order']['shipping_fee'], 0)
-        self.assertEqual(data['order']['status'], 'confirmed')
+        self.assertEqual(data['order']['status'], 'shipped')
+        self.assertEqual(data['order']['city_code'], 'cairo')
+        self.assertEqual(data['order']['country_code'], 'EG')
         self.assertIsNone(data['order']['deleted_at'])
+        arabic_order = self.request('get_order.php?id=2')[1]['order']
+        self.assertEqual(arabic_order['city_code'], 'giza')
+        self.assertEqual(arabic_order['country_code'], 'EG')
+        self.assertEqual(arabic_order['items'][0]['name'], 'اسم قديم')
         self.assertEqual(len(products[1]['variants']), 1)
         self.assertEqual(products[1]['variants'][0]['label_en'], '250g pack')
 
@@ -209,6 +217,11 @@ class AdminIntegrationTests(unittest.TestCase):
                 _, saved = self.request('get_order.php?id=' + str(order['order_id']))
                 self.assertEqual(saved['order']['shipping_fee'], fee)
                 self.assertEqual(saved['order']['total_amount'], 65 + fee)
+                self.assertEqual(saved['order']['city_code'], {'Giza': 'giza', 'الجيزة': 'giza', 'Alexandria': 'alexandria', 'الإسكندرية': 'alexandria', 'Cairo': 'cairo'}[city])
+                self.assertEqual(saved['order']['country_code'], 'EG')
+            code, coded = self.order(product_id, city_code='giza', shipping_fee=75.25)
+            self.assertEqual(code, 200, coded)
+            self.assertEqual(self.request('get_order.php?id=' + str(coded['order_id']))[1]['order']['city'], 'Giza')
             _, old = self.order(product_id, city='Giza', shipping_fee=75.25)
             self.request('save_shipping.php', {'city': 'Giza', 'fee': 90})
             _, saved = self.request('get_order.php?id=' + str(old['order_id']))
@@ -232,11 +245,28 @@ class AdminIntegrationTests(unittest.TestCase):
         self.assertEqual(self.request('save_shipping.php')[0], 405)
         self.assertEqual(self.request('get_shipping.php', {})[0], 405)
 
+    def test_location_codes_unify_languages_and_filters(self):
+        product_id, _ = self.product()
+        english = self.order(product_id, language='en', city='Cairo')[1]['order_id']
+        arabic = self.order(product_id, language='ar', city='القاهرة')[1]['order_id']
+        for order_id in [english, arabic]:
+            order = self.request('get_order.php?id=' + str(order_id))[1]['order']
+            self.assertEqual(order['city_code'], 'cairo')
+            self.assertEqual(order['country_code'], 'EG')
+            self.assertEqual(order['city'], 'Cairo')
+            self.assertEqual(order['country'], 'Egypt')
+        for query in ['city_code=cairo', 'city=Cairo', 'city=%D8%A7%D9%84%D9%82%D8%A7%D9%87%D8%B1%D8%A9', 'country_code=EG', 'country=Egypt']:
+            orders = self.request('get_orders.php?' + query)[1]['orders']
+            self.assertTrue({english, arabic}.issubset({order['id'] for order in orders}), query)
+        self.assertEqual(self.request('get_orders.php?city_code=unknown')[0], 422)
+        self.assertEqual(self.request('get_orders.php?country_code=unknown')[0], 422)
+
     def test_shipping_city_list_matches_checkout(self):
         import re
-        entries = re.findall(r"\{ en: '([^']+)', ar: '([^']+)' \}", (ROOT / 'assets/js/egypt-cities.js').read_text())
+        entries = re.findall(r"\{ code: '([^']+)', en: '([^']+)', ar: '([^']+)' \}", (ROOT / 'assets/js/egypt-cities.js').read_text())
         cities = json.loads((ROOT / 'api/shipping-cities.json').read_text())
-        self.assertEqual(cities, [dict(en=en, ar=ar) for en, ar in entries])
+        self.assertEqual(cities, [dict(code=code, en=en, ar=ar) for code, en, ar in entries])
+        self.assertEqual(len({city['code'] for city in cities}), len(cities))
 
     def test_create_edit_archive_restore_and_order_history(self):
         product_id, product = self.product()
@@ -254,6 +284,8 @@ class AdminIntegrationTests(unittest.TestCase):
         self.assertTrue(next(p for p in admin['products'] if p['id'] == product_id)['archived'])
         _, old = self.request('get_order.php?id=' + str(order['order_id']))
         self.assertEqual(old['order']['items'][0]['name'], 'Test tea <b>literal</b>')
+        self.assertEqual(old['order']['items'][0]['name_en'], 'Test tea <b>literal</b>')
+        self.assertEqual(old['order']['items'][0]['name_ar'], 'شاي تجريبي')
         self.assertEqual(old['order']['total_amount'], 115)
         self.assertEqual(self.request('archive_product.php', {'id': product_id, 'archived': False})[0], 200)
         _, public = self.request('get_products.php', anonymous=True)
@@ -268,6 +300,8 @@ class AdminIntegrationTests(unittest.TestCase):
         self.assertEqual(code, 200)
         _, data = self.request('get_order.php?id=' + str(order['order_id']))
         self.assertEqual(data['order']['items'][0]['name'], 'شاي تجريبي')
+        self.assertEqual(data['order']['items'][0]['name_en'], 'Test tea <b>literal</b>')
+        self.assertEqual(data['order']['items'][0]['name_ar'], 'شاي تجريبي')
         self.assertEqual(data['order']['total_amount'], 115)
         for qty in [0, -1, 1.2, '2', 1000]:
             self.assertEqual(self.order(product_id, items=[dict(id=product_id, qty=qty, price=32.5)])[0], 422)
@@ -287,6 +321,10 @@ class AdminIntegrationTests(unittest.TestCase):
         self.assertTrue(all(o['status'] == 'completed' for o in data['orders']))
         self.assertGreaterEqual(data['stats']['completed'], 2)
         self.assertEqual(self.request('update_order_status.php', {'id': ids[0], 'status': 'delivered'})[0], 200)
+        self.assertEqual(self.request('update_order_status.php', {'id': ids[0], 'status': 'shipped'})[0], 200)
+        _, shipped = self.request('get_orders.php?status=shipped')
+        self.assertIn(ids[0], [order['id'] for order in shipped['orders']])
+        self.assertGreaterEqual(shipped['stats']['shipped'], 1)
 
     def test_bulk_rejects_invalid_payloads(self):
         for ids in [[], ['1'], [True], [0], [-1], [1.5], '1']:
@@ -394,8 +432,8 @@ class AdminIntegrationTests(unittest.TestCase):
         self.assertEqual(self.request('restore_order.php', dict(id=ids[0]))[0], 200)
         self.assertEqual(self.request('get_order.php?id=' + str(ids[0]))[1]['order'], original['order'])
         self.assertEqual(self.request('get_orders.php?deleted=1')[1]['stats']['total'], 0)
-        self.assertEqual(self.request('update_order_status.php', dict(id=ids[0], status='shipped'))[0], 422)
-        self.assertEqual(self.request('get_orders.php?status=shipped')[0], 422)
+        self.assertEqual(self.request('update_order_status.php', dict(id=ids[0], status='shipped'))[0], 200)
+        self.assertEqual(self.request('get_orders.php?status=shipped')[0], 200)
         self.assertEqual(self.request('get_orders.php?deleted=invalid')[0], 422)
         for endpoint in ['delete_order.php', 'restore_order.php']:
             self.assertEqual(self.request(endpoint)[0], 405)

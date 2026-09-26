@@ -6,15 +6,15 @@ function renderAdminShipping() {
   const select = document.getElementById('shippingCity');
   const selected = select.value;
   select.innerHTML = osAdminShipping.map((city) =>
-    `<option value="${osEscape(city.en)}">${osEscape(osLang() === 'ar' ? city.ar : city.en)}</option>`).join('');
-  if (osAdminShipping.some((city) => city.en === selected)) select.value = selected;
+    `<option value="${osEscape(city.code)}">${osEscape(osLang() === 'ar' ? city.ar : city.en)}</option>`).join('');
+  if (osAdminShipping.some((city) => city.code === selected)) select.value = selected;
   fillShippingFee();
   document.getElementById('shippingTableBody').innerHTML = osAdminShipping.map((city) =>
     `<tr><td>${osEscape(osLang() === 'ar' ? city.ar : city.en)}</td><td>${osFormatPrice(city.fee)}</td></tr>`).join('');
 }
 
 function fillShippingFee() {
-  const city = osAdminShipping.find((entry) => entry.en === document.getElementById('shippingCity').value);
+  const city = osAdminShipping.find((entry) => entry.code === document.getElementById('shippingCity').value);
   document.getElementById('shippingFee').value = city?.fee ?? '';
 }
 
